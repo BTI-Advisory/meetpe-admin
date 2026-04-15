@@ -1,0 +1,34 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    /**
+     * Run the migrations.
+     */
+    public function up(): void
+    {
+        Schema::table('users', function (Blueprint $table) {
+            //
+            $table->text("piece_d_identite")->nullable();
+            $table->text("KBIS_file")->nullable();
+            $table->string("name_of_company")->nullable();
+        });
+    }
+
+    /**
+     * Reverse the migrations.
+     */
+    public function down(): void
+    {
+        Schema::table('users', function (Blueprint $table) {
+            //
+            $table->dropColumn("piece_d_identite");
+            $table->dropColumn("KBIS_file");
+            $table->dropColumn("name_of_company");
+        });
+    }
+};

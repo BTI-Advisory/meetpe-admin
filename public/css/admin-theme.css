@@ -1,0 +1,180 @@
+/* ─── MeetPeople Admin Theme ───────────────────────────── */
+
+/* Font */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+:root {
+    --font-family: 'Inter', sans-serif;
+}
+
+* {
+    font-family: 'Inter', sans-serif !important;
+}
+
+/* ── Sidebar ─────────────────────────────────────────── */
+.fi-sidebar {
+    background-color: #1a1a1a !important;
+    border-right: none !important;
+}
+
+.fi-sidebar-header {
+    background-color: #1a1a1a !important;
+    border-bottom: 1px solid rgba(255,255,255,0.08) !important;
+    padding: 1.25rem 1rem !important;
+}
+
+/* Nav items */
+.fi-sidebar-nav-groups {
+    padding: 0.5rem 0 !important;
+}
+
+.fi-sidebar-item-button {
+    color: rgba(255,255,255,0.65) !important;
+    border-radius: 8px !important;
+    margin: 1px 8px !important;
+    transition: all 0.15s ease !important;
+}
+
+.fi-sidebar-item-button:hover {
+    background-color: rgba(255,255,255,0.07) !important;
+    color: #fff !important;
+}
+
+.fi-sidebar-item-button.fi-active,
+.fi-sidebar-item-button[aria-current] {
+    background-color: #FF4C00 !important;
+    color: #fff !important;
+}
+
+.fi-sidebar-item-button.fi-active svg,
+.fi-sidebar-item-button[aria-current] svg {
+    color: #fff !important;
+}
+
+.fi-sidebar-group-label {
+    color: rgba(255,255,255,0.35) !important;
+    font-size: 0.65rem !important;
+    letter-spacing: 0.08em !important;
+    text-transform: uppercase !important;
+    font-weight: 600 !important;
+    padding: 0.75rem 1rem 0.25rem !important;
+}
+
+/* Badge count on sidebar */
+.fi-sidebar-item-badge {
+    background-color: #FF4C00 !important;
+    color: #fff !important;
+    font-weight: 600 !important;
+    border-radius: 999px !important;
+}
+
+/* ── Topbar ──────────────────────────────────────────── */
+.fi-topbar {
+    background-color: #fff !important;
+    border-bottom: 1px solid #f0f0f0 !important;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04) !important;
+}
+
+/* ── Page background ─────────────────────────────────── */
+.fi-main {
+    background-color: #f7f7f5 !important;
+}
+
+/* ── Cards ───────────────────────────────────────────── */
+.fi-ta-ctn,
+.fi-section,
+.fi-wi-stats-overview-stat {
+    border-radius: 12px !important;
+    border: 1px solid #ebebeb !important;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.04) !important;
+}
+
+/* ── Stat widgets ────────────────────────────────────── */
+.fi-wi-stats-overview-stat {
+    background-color: #fff !important;
+}
+
+.fi-wi-stats-overview-stat-value {
+    color: #1a1a1a !important;
+    font-weight: 700 !important;
+    font-size: 1.75rem !important;
+}
+
+.fi-wi-stats-overview-stat-label {
+    color: #6b6b6b !important;
+    font-size: 0.8rem !important;
+    font-weight: 500 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.04em !important;
+}
+
+/* ── Buttons ─────────────────────────────────────────── */
+.fi-btn-color-primary {
+    background-color: #FF4C00 !important;
+    border-color: #FF4C00 !important;
+    color: #fff !important;
+    border-radius: 8px !important;
+    font-weight: 600 !important;
+}
+
+.fi-btn-color-primary:hover {
+    background-color: #e64400 !important;
+    border-color: #e64400 !important;
+}
+
+.fi-btn {
+    border-radius: 8px !important;
+    font-weight: 500 !important;
+}
+
+/* ── Badges ──────────────────────────────────────────── */
+.fi-badge {
+    border-radius: 6px !important;
+    font-weight: 600 !important;
+    font-size: 0.7rem !important;
+}
+
+/* ── Table ───────────────────────────────────────────── */
+.fi-ta-header-cell {
+    font-size: 0.7rem !important;
+    font-weight: 700 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.06em !important;
+    color: #9a9a9a !important;
+}
+
+.fi-ta-row:hover td {
+    background-color: #fef6f3 !important;
+}
+
+/* ── Tabs ────────────────────────────────────────────── */
+.fi-tabs-tab[aria-selected="true"],
+.fi-tabs-tab.fi-active {
+    color: #FF4C00 !important;
+    border-color: #FF4C00 !important;
+}
+
+/* ── Inputs / filters ────────────────────────────────── */
+.fi-input,
+.fi-select-input {
+    border-radius: 8px !important;
+    border-color: #e5e5e5 !important;
+}
+
+.fi-input:focus,
+.fi-select-input:focus {
+    border-color: #FF4C00 !important;
+    box-shadow: 0 0 0 3px rgba(255,76,0,0.12) !important;
+}
+
+/* ── Login page ──────────────────────────────────────── */
+.fi-simple-main {
+    background-color: #f7f7f5 !important;
+}
+
+.fi-simple-layout {
+    background-color: #fff !important;
+    border-radius: 16px !important;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.08) !important;
+    border: 1px solid #ebebeb !important;
+}
