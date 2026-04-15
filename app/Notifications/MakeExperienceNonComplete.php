@@ -94,8 +94,6 @@ class MakeExperienceNonComplete extends Notification
     {
         $now = Carbon::now();
 
-                $notifiable->email = "chaima.Wetcha@bti-advisory.com";
-
         return (new MailMessage)
             ->from("contact@meetpe.fr", "MeetPe")
             ->withSymfonyMessage(function (Email $message) {
