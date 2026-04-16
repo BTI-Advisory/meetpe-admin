@@ -8,9 +8,6 @@ use Carbon\Carbon;
 use Illuminate\Bus\Queueable;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
-use NotificationChannels\Fcm\FcmChannel;
-use NotificationChannels\Fcm\FcmMessage;
-use NotificationChannels\Fcm\Resources\Notification as FcmNotification;
 use Symfony\Component\Mime\Email;
 use Illuminate\Support\Facades\App;
 
@@ -20,14 +17,11 @@ class MakeExperienceNonComplete extends Notification
 
     protected array $reason;
 
-    /**
-     * Create a new notification instance.
-     */
     public function __construct(string $reason, private string $experienceName, private string $fcm_tokn)
     {
-        //
         $this->reason = $this->formatMessage($reason);
     }
+
     private function formatMessage(string $reason_p): array
     {
         if (strstr($reason_p, '_')) {
@@ -40,86 +34,29 @@ class MakeExperienceNonComplete extends Notification
         return [$reason_p];
     }
 
-    /**
-     * Get the notification's delivery channels.
-     *
-     * @return array<int, string>
-     */
     public function via(object $notifiable): array
     {
-        $channels = (new AppNotification())->AllowedChannelsByUser($notifiable->email, EnumNotificationType::NOTIFICATION_RESERVATION->value);
-        if ($this->fcm_tokn == '' || is_null($this->fcm_tokn) || !isset($this->fcm_tokn)) {
-            return $channels;
-        }
-
-        array_push($channels, FcmChannel::class);
-        return $channels;
+        return (new AppNotification())->AllowedChannelsByUser($notifiable->email, EnumNotificationType::NOTIFICATION_RESERVATION->value);
     }
-    public function toFcm($notifiable): FcmMessage
-    {
-        $notification = array('title' => "Meet People", 'text' => __('general.experience_comment'), 'sound' => 'default', 'badge' => '1');
 
-        return (
-            new FcmMessage(
-                notification: new FcmNotification(
-                    title: "Meet People",
-                    body: __('general.experience_comment'),
-                    //     image: 'https://www.meetpe.fr/azaaz.png'
-                )
-            )
-        )
-            ->data(['data1' => 'value', 'data2' => 'value2'])
-            ->custom([
-                'android' => [
-                    'notification' => [
-                        'color' => '#0A0A0A',
-                    ],
-                    'fcm_options' => [
-                        'analytics_label' => 'analytics',
-                    ],
-                ],
-                'apns' => [
-                    'notification' => $notification,
-                    'fcm_options' => [
-                        'analytics_label' => 'analytics',
-                        //          'image' => 'https://www.meetpe.fr/azaaz.png', // Optional image URL for rich notifications
-                    ],
-                ],
-            ]);
-    }
-    /**
-     * Get the mail representation of the notification.
-     */
     public function toMail(object $notifiable): MailMessage
     {
         $now = Carbon::now();
-
         return (new MailMessage)
             ->from("contact@meetpe.fr", "MeetPe")
             ->withSymfonyMessage(function (Email $message) {
-                $message->getHeaders()->addTextHeader(
-                    'Custom-Header',
-                    'Header Value'
-                );
+                $message->getHeaders()->addTextHeader('Custom-Header', 'Header Value');
                 $message->sender("contact@meetpe.fr");
             })
             ->subject(__('general.experience_comment'))
             ->view(
-                'notifications.experience.'.App::getLocale().'_your_experience_is_non_complete',
-                ["username" => $notifiable->name, "currentYear" => $now->year, "reason" => $this->reason, "experienceName"=>$this->experienceName]
-
+                'notifications.experience.' . App::getLocale() . '_your_experience_is_non_complete',
+                ['username' => $notifiable->name, 'currentYear' => $now->year, 'reason' => $this->reason, 'experienceName' => $this->experienceName]
             );
     }
 
-    /**
-     * Get the array representation of the notification.
-     *
-     * @return array<string, mixed>
-     */
     public function toArray(object $notifiable): array
     {
-        return [
-            //
-        ];
+        return [];
     }
 }

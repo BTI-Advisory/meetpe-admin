@@ -24,7 +24,11 @@ use Filament\Infolists\Components\Section;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Infolists\Infolist;
 use Filament\Resources\Resource;
+use App\Notifications\MakeExperienceNonComplete;
+use App\Notifications\YourExperienceIsValid;
+use Filament\Notifications\Notification;
 use Filament\Tables\Actions\Action;
+use Filament\Tables\Actions\ActionGroup;
 use Filament\Tables\Actions\EditAction;
 use Filament\Tables\Actions\ViewAction;
 use Filament\Tables\Columns\ImageColumn;
@@ -416,6 +420,70 @@ class GuideExperienceResource extends Resource
             ->actions([
                 ViewAction::make()->label('Détail'),
                 EditAction::make()->label('Modifier'),
+                ActionGroup::make([
+                    Action::make('accepter')
+                        ->label('Mettre en ligne')
+                        ->icon('heroicon-o-check-circle')
+                        ->color('success')
+                        ->requiresConfirmation()
+                        ->modalHeading('Mettre cette expérience en ligne ?')
+                        ->visible(fn ($record) => $record->status !== GuideExperienceStatusEnum::ONLINE->value
+                            && $record->status !== GuideExperienceStatusEnum::DELETED->value)
+                        ->action(function ($record) {
+                            $record->status = GuideExperienceStatusEnum::ONLINE->value;
+                            $record->save();
+                            $user = User::find($record->user_id);
+                            if ($user) {
+                                App::setLocale($user->device_language ?? 'fr');
+                                $user->notify(new YourExperienceIsValid(
+                                    $user->fcm_token,
+                                    $record->getTitleForLocale($user->device_language ?? 'fr')
+                                ));
+                            }
+                            Notification::make()->title('Expérience mise en ligne')->success()->send();
+                        }),
+
+                    Action::make('refuser')
+                        ->label('Refuser')
+                        ->icon('heroicon-o-x-circle')
+                        ->color('danger')
+                        ->requiresConfirmation()
+                        ->modalHeading('Refuser cette expérience ?')
+                        ->visible(fn ($record) => $record->status !== GuideExperienceStatusEnum::REFUSED->value
+                            && $record->status !== GuideExperienceStatusEnum::DELETED->value)
+                        ->action(function ($record) {
+                            $record->status = GuideExperienceStatusEnum::REFUSED->value;
+                            $record->save();
+                            Notification::make()->title('Expérience refusée')->danger()->send();
+                        }),
+
+                    Action::make('a_completer')
+                        ->label('À compléter')
+                        ->icon('heroicon-o-chat-bubble-left-ellipsis')
+                        ->color('warning')
+                        ->form([
+                            Textarea::make('raison')
+                                ->label('Raison à communiquer au guide')
+                                ->required()
+                                ->rows(4),
+                        ])
+                        ->visible(fn ($record) => $record->status !== GuideExperienceStatusEnum::DELETED->value)
+                        ->action(function ($record, array $data) {
+                            $record->raison = $data['raison'];
+                            $record->status = GuideExperienceStatusEnum::TO_BE_COMPLETED->value;
+                            $record->save();
+                            $user = User::find($record->user_id);
+                            if ($user) {
+                                App::setLocale($user->device_language ?? 'fr');
+                                $user->notify(new MakeExperienceNonComplete(
+                                    $data['raison'],
+                                    $record->getTitleForLocale($user->device_language ?? 'fr'),
+                                    $user->fcm_token
+                                ));
+                            }
+                            Notification::make()->title('Notification envoyée au guide')->warning()->send();
+                        }),
+                ])->label('Actions')->icon('heroicon-m-ellipsis-vertical'),
             ])
             ->headerActions([
                 Action::make('export')

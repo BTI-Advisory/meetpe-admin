@@ -1,97 +1,172 @@
-<!DOCTYPE html>
-<html xmlns="http://www.w3.org/1999/xhtml">
-<head>
+<!DOCTYPE html><html xmlns="http://www.w3.org/1999/xhtml" xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office"><head>
+<!--[if gte mso 15]>
+<xml>
+<o:OfficeDocumentSettings>
+<o:AllowPNG/>
+<o:PixelsPerInch>96</o:PixelsPerInch>
+</o:OfficeDocumentSettings>
+</xml>
+<![endif]-->
 <meta charset="UTF-8"/>
 <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>Additional document required</title>
+<title>*|MC:SUBJECT|*</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin=""/>
-<link rel="stylesheet" type="text/css" href="https://fonts.googleapis.com/css?family=Work+Sans:400,400i,700,700i,900,900i"/>
-<style>
-    img { -ms-interpolation-mode: bicubic; }
-    table, td { mso-table-lspace: 0pt; mso-table-rspace: 0pt; }
-    p, a, li, td, body, table, blockquote { -ms-text-size-adjust: 100%; -webkit-text-size-adjust: 100%; }
-    body { height: 100%; margin: 0; padding: 0; width: 100%; background: #ffffff; font-family: "Work Sans", sans-serif; }
-    p { margin: 0; padding: 0; }
-    table { border-collapse: collapse; }
-    td, p, a { word-break: break-word; }
-    img, a img { border: 0; height: auto; outline: none; text-decoration: none; }
-    .wrapper { max-width: 660px; margin: 0 auto; background-color: #f1e7da; }
-    .header img { display: block; width: 100%; }
-    .content { padding: 24px; color: #000000; font-size: 16px; line-height: 1.5; }
-    .content p { margin-bottom: 16px; }
-    .footer { padding: 16px; text-align: center; background-color: #f1e7da; color: #333333; font-size: 12px; }
-    .footer a { color: #333333; }
-    .divider { border-top: 1px solid #000000; margin: 16px 0; }
-    .logo { text-align: center; padding: 12px 0; }
-    .logo img { width: 63px; height: auto; }
-</style>
-</head>
+<!--[if !mso]><!--><link rel="stylesheet" type="text/css" id="newGoogleFontsStatic" href="https://fonts.googleapis.com/css?family=Work+Sans:400,400i,700,700i,900,900i"/><!--<![endif]--><style>          img{-ms-interpolation-mode:bicubic;} 
+          table, td{mso-table-lspace:0pt; mso-table-rspace:0pt;} 
+          .mceStandardButton, .mceStandardButton td, .mceStandardButton td a{mso-hide:all !important;} 
+          p, a, li, td, blockquote{mso-line-height-rule:exactly;} 
+          p, a, li, td, body, table, blockquote{-ms-text-size-adjust:100%; -webkit-text-size-adjust:100%;} 
+          @media only screen and (max-width: 480px){
+            body, table, td, p, a, li, blockquote{-webkit-text-size-adjust:none !important;} 
+          }
+          .mcnPreviewText{display: none !important;} 
+          .bodyCell{margin:0 auto; padding:0; width:100%;}
+          .ExternalClass, .ExternalClass p, .ExternalClass td, .ExternalClass div, .ExternalClass span, .ExternalClass font{line-height:100%;} 
+          .ReadMsgBody{width:100%;} .ExternalClass{width:100%;} 
+          a[x-apple-data-detectors]{color:inherit !important; text-decoration:none !important; font-size:inherit !important; font-family:inherit !important; font-weight:inherit !important; line-height:inherit !important;} 
+            body{height:100%; margin:0; padding:0; width:100%; background: #ffffff;}
+            p{margin:0; padding:0;} 
+            table{border-collapse:collapse;} 
+            td, p, a{word-break:break-word;} 
+            h1, h2, h3, h4, h5, h6{display:block; margin:0; padding:0;} 
+            img, a img{border:0; height:auto; outline:none; text-decoration:none;} 
+            a[href^="tel"], a[href^="sms"]{color:inherit; cursor:default; text-decoration:none;} 
+            li p {margin: 0 !important;}
+            .ProseMirror a {
+                pointer-events: none;
+            }
+            @media only screen and (max-width: 640px){
+                .mceClusterLayout td{padding: 4px !important;} 
+            }
+            @media only screen and (max-width: 480px){
+                body{width:100% !important; min-width:100% !important; } 
+                body.mobile-native {
+                    -webkit-user-select: none; user-select: none; transition: transform 0.2s ease-in; transform-origin: top center;
+                }
+                body.mobile-native.selection-allowed a, body.mobile-native.selection-allowed .ProseMirror {
+                    user-select: auto;
+                    -webkit-user-select: auto;
+                }
+                colgroup{display: none;}
+                img{height: auto !important;}
+                .mceWidthContainer{max-width: 660px !important;}
+                .mceColumn{display: block !important; width: 100% !important;}
+                .mceColumn-forceSpan{display: table-cell !important; width: auto !important;}
+                .mceColumn-forceSpan .mceButton a{min-width:0 !important;}
+                .mceBlockContainer{padding-right:16px !important; padding-left:16px !important;} 
+                .mceTextBlockContainer{padding-right:16px !important; padding-left:16px !important;} 
+                .mceBlockContainerE2E{padding-right:0px; padding-left:0px;} 
+                .mceSpacing-24{padding-right:16px !important; padding-left:16px !important;}
+                .mceImage, .mceLogo{width: 100% !important; height: auto !important;} 
+                .mceFooterSection .mceText, .mceFooterSection .mceText p{font-size: 16px !important; line-height: 140% !important;}
+            }
+            div[contenteditable="true"] {outline: 0;}
+            .ProseMirror h1.empty-node:only-child::before,
+            .ProseMirror h2.empty-node:only-child::before,
+            .ProseMirror h3.empty-node:only-child::before,
+            .ProseMirror h4.empty-node:only-child::before {
+                content: 'Heading';
+            }
+            .ProseMirror p.empty-node:only-child::before, .ProseMirror:empty::before {
+                content: 'Start typing...';
+            }
+            .mceImageBorder {display: inline-block;}
+            .mceImageBorder img {border: 0 !important;}
+body, #bodyTable { background-color: rgb(255, 255, 255); }.mceText, .mcnTextContent, .mceLabel { font-family: "Work Sans", sans-serif; }.mceText, .mcnTextContent, .mceLabel { color: rgb(0, 0, 0); }.mceText p { margin-bottom: 0px; }.mceText label { margin-bottom: 0px; }.mceText input { margin-bottom: 0px; }.mceSpacing-24 .mceInput + .mceErrorMessage { margin-top: -12px; }.mceText p { margin-bottom: 0px; }.mceText label { margin-bottom: 0px; }.mceText input { margin-bottom: 0px; }.mceSpacing-12 .mceInput + .mceErrorMessage { margin-top: -6px; }.mceInput { background-color: transparent; border: 2px solid rgb(208, 208, 208); width: 60%; color: rgb(77, 77, 77); display: block; }.mceInput[type="radio"], .mceInput[type="checkbox"] { float: left; margin-right: 12px; display: inline; width: auto !important; }.mceLabel > .mceInput { margin-bottom: 0px; margin-top: 2px; }.mceLabel { display: block; }.mceText p, .mcnTextContent p { color: rgb(0, 0, 0); font-family: "Work Sans", sans-serif; font-size: 16px; font-weight: normal; line-height: 1.5; mso-line-height-alt: 150%; text-align: center; direction: ltr; }.mceText a, .mcnTextContent a { color: rgb(0, 0, 0); font-style: normal; font-weight: normal; text-decoration: underline; direction: ltr; }.mceSectionHeader .mceText p, .mceSectionHeader .mcnTextContent p { }.mceSectionHeader .mceText a, .mceSectionHeader .mcnTextContent a { font-style: normal; }.mceSectionFooter .mceText p, .mceSectionFooter .mcnTextContent p { }.mceSectionFooter .mceText a, .mceSectionFooter .mcnTextContent a { font-style: normal; }
+@media only screen and (max-width: 480px) {
+            .mceText p { margin: 0px; font-size: 16px !important; line-height: 1.5 !important; mso-line-height-alt: 150%; }
+          }
+@media only screen and (max-width: 480px) {
+            .mceBlockContainer { padding-left: 16px !important; padding-right: 16px !important; }
+          }
+@media only screen and (max-width: 480px) {
+            .mceButtonContainer { width: fit-content !important; max-width: fit-content !important; }
+          }
+@media only screen and (max-width: 480px) {
+            .mceButtonLink { padding: 18px 28px !important; font-size: 16px !important; }
+          }
+@media only screen and (max-width: 480px) {
+            .mceDividerBlock { border-top-width: 2px !important; }
+          }
+@media only screen and (max-width: 480px) {
+            .mceDividerContainer { width: 100% !important; }
+          }
+#dataBlockId-17 p, #dataBlockId-17 h1, #dataBlockId-17 h2, #dataBlockId-17 h3, #dataBlockId-17 h4, #dataBlockId-17 ul { text-align: center; }</style></head>
 <body>
-<center>
-<table border="0" cellpadding="0" cellspacing="0" width="100%" style="background-color:#ffffff;">
-<tbody>
-<tr>
-<td align="center" valign="top">
-<table border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width:660px;" class="wrapper">
-<tbody>
-
-<!-- Header image -->
-<tr>
-<td class="header">
-    <img src="https://mcusercontent.com/b4e0f5c1ee667bb09e7ace873/images/7c773455-29b9-e381-8dce-a1543c3be9d7.png" width="660" alt="Meet People" style="display:block;width:100%;"/>
-</td>
-</tr>
-
-<!-- Body -->
-<tr>
-<td class="content">
-    <p>Hello <strong>{{ $username }}</strong>,</p>
-
-    <p>We have received your submission for your experience <strong>{{ $experienceTitle }}</strong>.</p>
-
-    <p>In order to complete the verification of your experience, we need <strong>additional documents</strong> from you.</p>
-
-    <p>Please log in to the Meet People app and submit the required documents as soon as possible.</p>
-
-    <p>If you have any questions, feel free to reach us at: <a href="mailto:contact@meetpe.fr">contact@meetpe.fr</a> 🧡</p>
-
-    <p>See you soon,<br/>The Meet People Team</p>
-</td>
-</tr>
-
-<!-- Divider -->
-<tr>
-<td style="padding: 0 16px;">
-    <div class="divider"></div>
-</td>
-</tr>
-
-<!-- Logo -->
-<tr>
-<td class="logo">
-    <img src="https://mcusercontent.com/b4e0f5c1ee667bb09e7ace873/images/fc792195-a44a-a57f-084a-33f65c528efb.png" width="63" alt="Meet People"/>
-</td>
-</tr>
-
-<!-- Footer -->
-<tr>
-<td class="footer">
-    <p>
-        <em><span>Copyright &copy; {{ $currentYear }} Meet People. {!! __('general.right_reserved') !!}</span></em><br/>
-        <span>{!! __('general.our_address') !!}</span><br/>
-        <span>Meet People &bull; 18 Rue Drouot &bull; Paris 75009 &bull; France</span>
-    </p>
-</td>
-</tr>
-
-</tbody>
-</table>
-</td>
-</tr>
-</tbody>
-</table>
+<!--*|IF:MC_PREVIEW_TEXT|*-->
+    <!--[if !gte mso 9]><!----><span class="mcnPreviewText" style="display:none; font-size:0px; line-height:0px; max-height:0px; max-width:0px; opacity:0; overflow:hidden; visibility:hidden; mso-hide:all;"></span><!--<![endif]-->
+    <!--*|END:IF|*-->
+    <center>
+<table border="0" cellpadding="0" cellspacing="0" height="100%" width="100%" id="bodyTable" style="background-color: rgb(255, 255, 255);">
+<tbody><tr>
+<td class="bodyCell" align="center" valign="top">
+<table id="root" border="0" cellpadding="0" cellspacing="0" width="100%"><tbody data-block-id="4" class="mceWrapper"><tr><td style="background-color:#ffffff" valign="top" align="center" class="mceSectionHeader"><!--[if (gte mso 9)|(IE)]><table align="center" border="0" cellspacing="0" cellpadding="0" width="660" style="width:660px;"><tr><td><![endif]--><table border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width:660px" role="presentation"><tbody><tr><td style="background-color:#f1e7da" valign="top" class="mceWrapperInner"><table align="center" border="0" cellpadding="0" cellspacing="0" width="100%" role="presentation" data-block-id="3"><tbody><tr class="mceRow"><td style="background-position:center;background-repeat:no-repeat;background-size:cover" valign="top"><table border="0" cellpadding="0" cellspacing="0" width="100%" role="presentation"><tbody><tr><td style="padding-top:0;padding-bottom:0" valign="top" class="mceColumn" data-block-id="-9" colspan="12" width="100%"><table border="0" cellpadding="0" cellspacing="0" width="100%" role="presentation"><tbody><tr><td style="padding-top:12px;padding-bottom:12px;padding-right:0;padding-left:0" valign="top" class="mceBlockContainerE2E" align="full"><span class="mceImageBorder" style="border:0;border-radius:0;vertical-align:top;margin:0"><img data-block-id="1" width="660" height="auto" style="width:660px;height:auto;max-width:660px !important;border-radius:0;display:block" alt="" src="https://mcusercontent.com/b4e0f5c1ee667bb09e7ace873/images/7c773455-29b9-e381-8dce-a1543c3be9d7.png" role="presentation" class="imageDropZone mceImage"/></span></td></tr><tr><td style="padding-top:0;padding-bottom:0;padding-right:0;padding-left:0" valign="top"><table width="100%" style="border:0;border-radius:0;border-collapse:separate"><tbody><tr><td style="padding-left:24px;padding-right:24px;padding-top:12px;padding-bottom:12px" class="mceTextBlockContainer"><div data-block-id="2" class="mceText" id="dataBlockId-2" style="width:100%"><p style="text-align: left;">Hello {{$username}}, </p><p><br/></p><p style="text-align: left;">We’re reaching out because we noticed that your activity <strong>{{$experienceTitle}}</strong>  on Meet People may require <strong>the verification of additional documents </strong> for security and compliance reasons.</p><p style="text-align: left;"><br/></p><p style="text-align: left;">We kindly ask you to provide the following documents (note: not all may be required—it depends on the nature of your experience):</p><p style="text-align: left;"><br/></p><p style="text-align: left;"><strong>Driver’s license  </strong>: Required if your activity involves the use of motorized vehicles or similar equipment. </p><p style="text-align: left;"><br/></p><p style="text-align: left;"><strong>License or authorization</strong> : Please submit any specific license or official authorization required by local regulations for your activity (e.g., professional guide card, APE code, accreditation, etc.). </p><p style="text-align: left;"><br/></p><p style="text-align: left;"><strong>Insurance </strong>: Make sure you have appropriate insurance coverage for your activity (e.g., personal liability, professional liability, vehicle insurance, etc.). </p><p style="text-align: left;"><br/></p><p style="text-align: left;">📥 Please upload these documents from your guide profile in the app: Go To <strong> My Account</strong>  &gt; <strong>My Documents</strong> &gt; <strong>Other Documents</strong>. </p><p style="text-align: left;"><br/></p><p style="text-align: left;">If you have any questions or need further assistance, feel free to contact us at <a href="mailto:contact@meetpe.fr">contact@meetpe.fr</a> We're here to help you make your activity on Meet People safe and successful!</p><p style="text-align: left;"><br/></p><p style="text-align: left;">Thanks in advance for your cooperation 🤝</p><p style="text-align: left;"><br/></p><p style="text-align: left;" class="last-child">{!! __('general.meet_people_team') !!} 🚀</p></div></td></tr></tbody></table></td></tr></tbody></table></td></tr></tbody></table></td></tr></tbody></table></td></tr></tbody></table><!--[if (gte mso 9)|(IE)]></td></tr></table><![endif]--></td></tr></tbody><tbody data-block-id="15" class="mceWrapper"><tr><td style="background-color:#ffffff" valign="top" align="center" class="mceSectionBody"><!--[if (gte mso 9)|(IE)]><table align="center" border="0" cellspacing="0" cellpadding="0" width="660" style="width:660px;"><tr><td><![endif]--><table border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width:660px" role="presentation"><tbody><tr><td style="background-color:#f1e7da" valign="top" class="mceWrapperInner"><table align="center" border="0" cellpadding="0" cellspacing="0" width="100%" role="presentation" data-block-id="14"><tbody><tr class="mceRow"><td style="background-position:center;background-repeat:no-repeat;background-size:cover" valign="top"><table border="0" cellpadding="0" cellspacing="0" width="100%" role="presentation"><tbody><tr><td style="padding-top:0;padding-bottom:0" valign="top" class="mceColumn" data-block-id="-11" colspan="12" width="100%"><table border="0" cellpadding="0" cellspacing="0" width="100%" role="presentation"><tbody><tr><td valign="top" class="mceGutterContainer" id="gutterContainerId-10"><table border="0" cellpadding="0" cellspacing="0" width="100%" style="border-collapse:separate" role="presentation"><tbody><tr><td style="padding-top:12px;padding-bottom:12px;padding-right:0;padding-left:0" valign="top" class="mceLayoutContainer"><table align="center" border="0" cellpadding="0" cellspacing="0" width="100%" role="presentation" data-block-id="10" id="section_2dd349c5d7a73e853ada94a64af40734" class="mceLayout"><tbody><tr class="mceRow"><td style="background-position:center;background-repeat:no-repeat;background-size:cover" valign="top"><table border="0" cellpadding="0" cellspacing="0" width="100%" role="presentation"><tbody><tr><td valign="top" class="mceColumn" data-block-id="-10" colspan="12" width="100%"><table border="0" cellpadding="0" cellspacing="0" width="100%" role="presentation"><tbody><tr><td valign="top" align="center"><table align="center" border="0" cellpadding="0" cellspacing="0" width="100%" role="presentation" data-block-id="-5"><tbody><tr class="mceRow"><td style="background-position:center;background-repeat:no-repeat;background-size:cover" valign="top"><table border="0" cellpadding="0" cellspacing="0" width="100%" role="presentation"><tbody><tr><td valign="top" class="mceColumn" data-block-id="-14" colspan="12" width="100%"><table border="0" cellpadding="0" cellspacing="0" width="100%" role="presentation"><tbody><tr><td valign="top"><table align="center" border="0" cellpadding="0" cellspacing="0" width="100%" role="presentation" data-block-id="9"><tbody><tr class="mceRow"><td style="background-position:center;background-repeat:no-repeat;background-size:cover;padding-top:0px;padding-bottom:0px" valign="top"><table border="0" cellpadding="0" cellspacing="24" width="100%" style="table-layout:fixed" role="presentation"><colgroup><col span="1" width="8.333333333333332%"/><col span="1" width="8.333333333333332%"/><col span="1" width="8.333333333333332%"/><col span="1" width="8.333333333333332%"/><col span="1" width="8.333333333333332%"/><col span="1" width="8.333333333333332%"/><col span="1" width="8.333333333333332%"/><col span="1" width="8.333333333333332%"/><col span="1" width="8.333333333333332%"/><col span="1" width="8.333333333333332%"/><col span="1" width="8.333333333333332%"/><col span="1" width="8.333333333333332%"/></colgroup><tbody><tr><td style="padding-top:0;padding-bottom:0" valign="top" class="mceColumn" data-block-id="6" colspan="6" width="50%"><table border="0" cellpadding="0" cellspacing="0" width="100%" role="presentation"><tbody><tr><td style="padding-top:12px;padding-bottom:12px;padding-right:12px;padding-left:12px" valign="top" class="mceBlockContainer" align="center"><div><!--[if !mso]><!--></div><table align="center" border="0" cellpadding="0" cellspacing="0" role="presentation" data-block-id="5" class="mceButtonContainer"><tbody><tr class="mceStandardButton"><td style="background-color:#ff4c00;border-radius:8px;text-align:center" valign="top" class="mceButton"><a href="https://meetpe.fr/FAQ" target="_blank" class="mceButtonLink" style="background-color:#ff4c00;border-radius:8px;border:1px solid #ff4c00;color:#ffffff;display:block;font-family:'Work Sans', sans-serif;font-size:16px;font-weight:normal;font-style:normal;padding:16px 28px;text-decoration:none;min-width:30px;text-align:center;direction:ltr;letter-spacing:0px" rel="noreferrer">{!! __('general.faq_link') !!}</a></td></tr></tbody></table><div><!--<![endif]--></div><table align="center" border="0" cellpadding="0" cellspacing="0" role="presentation" data-block-id="5" class="mceButtonContainer"><tbody><tr>
+<!--[if mso]>
+<td align="center">
+<v:roundrect xmlns:v="urn:schemas-microsoft-com:vml"
+xmlns:w="urn:schemas-microsoft-com:office:word"
+href=""
+style="v-text-anchor:middle; width:216.02px; height:55px;"
+arcsize="4%"
+strokecolor="#ff4c00"
+strokeweight="1px"
+fillcolor="#ff4c00">
+<v:stroke dashstyle="solid"/>
+<w:anchorlock />
+<center style="
+color: #ffffff;
+display: block;
+font-family: 'Work Sans', sans-serif;
+font-size: 16;
+font-style: normal;
+font-weight: normal;
+letter-spacing: 0px;
+text-decoration: none;
+text-align: center;
+direction: ltr;"
+>
+{!! __('general.faq_link') !!}
 </center>
-</body>
-</html>
+</v:roundrect>
+</td>
+<![endif]-->
+</tr></tbody></table></td></tr></tbody></table></td><td style="padding-top:0;padding-bottom:0" valign="top" class="mceColumn" data-block-id="8" colspan="6" width="50%"><table border="0" cellpadding="0" cellspacing="0" width="100%" role="presentation"><tbody><tr><td style="padding-top:12px;padding-bottom:12px;padding-right:24px;padding-left:24px" valign="top" class="mceBlockContainer" align="center"><div><!--[if !mso]><!--></div><table align="center" border="0" cellpadding="0" cellspacing="0" role="presentation" data-block-id="7" class="mceButtonContainer"><tbody><tr class="mceStandardButton"><td style="background-color:#ff4c00;border-radius:8px;text-align:center" valign="top" class="mceButton"><a href="mailto:contact@meetpe.fr" target="_blank" class="mceButtonLink" style="background-color:#ff4c00;border-radius:8px;border:1px solid #ff4c00;color:#ffffff;display:block;font-family:'Work Sans', sans-serif;font-size:16px;font-weight:normal;font-style:normal;padding:16px 28px;text-decoration:none;min-width:30px;text-align:center;direction:ltr;letter-spacing:0px" rel="noreferrer">{!! __('general.team_contact') !!}</a></td></tr></tbody></table><div><!--<![endif]--></div><table align="center" border="0" cellpadding="0" cellspacing="0" role="presentation" data-block-id="7" class="mceButtonContainer"><tbody><tr>
+<!--[if mso]>
+<td align="center">
+<v:roundrect xmlns:v="urn:schemas-microsoft-com:vml"
+xmlns:w="urn:schemas-microsoft-com:office:word"
+href=""
+style="v-text-anchor:middle; width:237.20000000000002px; height:55px;"
+arcsize="3%"
+strokecolor="#ff4c00"
+strokeweight="1px"
+fillcolor="#ff4c00">
+<v:stroke dashstyle="solid"/>
+<w:anchorlock />
+<center style="
+color: #ffffff;
+display: block;
+font-family: 'Work Sans', sans-serif;
+font-size: 16;
+font-style: normal;
+font-weight: normal;
+letter-spacing: 0px;
+text-decoration: none;
+text-align: center;
+direction: ltr;"
+>
+{!! __('general.team_contact') !!}
+</center>
+</v:roundrect>
+</td>
+<![endif]-->
+</tr></tbody></table></td></tr></tbody></table></td></tr></tbody></table></td></tr></tbody></table></td></tr></tbody></table></td></tr></tbody></table></td></tr></tbody></table></td></tr></tbody></table></td></tr></tbody></table></td></tr></tbody></table></td></tr></tbody></table></td></tr><tr><td style="background-color:transparent;padding-top:15px;padding-bottom:15px;padding-right:15px;padding-left:15px" valign="top" class="mceBlockContainer"><table align="center" border="0" cellpadding="0" cellspacing="0" width="100%" style="background-color:transparent;width:100%" role="presentation" class="mceDividerContainer" data-block-id="11"><tbody><tr><td style="min-width:100%;border-top-width:1px;border-top-style:solid;border-top-color:#000000;line-height:0;font-size:0" valign="top" class="mceDividerBlock"> </td></tr></tbody></table></td></tr><tr><td style="padding-top:7px;padding-bottom:7px;padding-right:7px;padding-left:7px" valign="top" class="mceBlockContainer" align="center"><span class="mceImageBorder" style="border:0;border-radius:0;vertical-align:top;margin:0"><img data-block-id="12" width="62.93691588785046" height="auto" style="width:62.93691588785046px;height:auto;max-width:62.93691588785046px !important;border-radius:0;display:block" alt="" src="https://mcusercontent.com/b4e0f5c1ee667bb09e7ace873/images/fc792195-a44a-a57f-084a-33f65c528efb.png" role="presentation" class="imageDropZone mceLogo"/></span></td></tr><tr><td style="padding-top:10px;padding-bottom:10px;padding-right:0;padding-left:0" valign="top" class="mceLayoutContainer"><table align="center" border="0" cellpadding="0" cellspacing="0" width="100%" role="presentation" data-block-id="13"><tbody><tr class="mceRow"><td style="background-position:center;background-repeat:no-repeat;background-size:cover" valign="top"><table border="0" cellpadding="0" cellspacing="24" width="100%" role="presentation"><tbody><tr><td valign="top" class="mceColumn" data-block-id="-8" colspan="12" width="100%"><table border="0" cellpadding="0" cellspacing="0" width="100%" role="presentation"><tbody><tr><td valign="top"><table align="center" border="0" cellpadding="0" cellspacing="0" role="presentation" class="mceSocialFollowBlock" data-block-id="-7"><tbody><tr><td valign="middle" align="center"><!--[if mso]><table align="left" border="0" cellspacing= "0" cellpadding="0"><tr><![endif]--><!--[if mso]><td align="center" valign="top"><![endif]--><table align="left" border="0" cellpadding="0" cellspacing="0" style="display:inline;float:left" role="presentation"><tbody><tr><td style="padding-top:3px;padding-bottom:3px;padding-left:12px;padding-right:12px" valign="top" class="mceSocialFollowIcon" align="center" width="32"><a href="https://facebook.com/" target="_blank" rel="noreferrer"><img class="mceSocialFollowImage" width="32" height="32" alt="Facebook icon" src="https://cdn-images.mailchimp.com/icons/social-block-v3/block-icons-v3/facebook-filled-dark-40.png"/></a></td></tr></tbody></table><!--[if mso]></td><![endif]--><!--[if mso]><td align="center" valign="top"><![endif]--><table align="left" border="0" cellpadding="0" cellspacing="0" style="display:inline;float:left" role="presentation"><tbody><tr><td style="padding-top:3px;padding-bottom:3px;padding-left:12px;padding-right:12px" valign="top" class="mceSocialFollowIcon" align="center" width="32"><a href="https://instagram.com/" target="_blank" rel="noreferrer"><img class="mceSocialFollowImage" width="32" height="32" alt="Instagram icon" src="https://cdn-images.mailchimp.com/icons/social-block-v3/block-icons-v3/instagram-filled-dark-40.png"/></a></td></tr></tbody></table><!--[if mso]></td><![endif]--><!--[if mso]><td align="center" valign="top"><![endif]--><table align="left" border="0" cellpadding="0" cellspacing="0" style="display:inline;float:left" role="presentation"><tbody><tr><td style="padding-top:3px;padding-bottom:3px;padding-left:12px;padding-right:12px" valign="top" class="mceSocialFollowIcon" align="center" width="32"><a href="https://tiktok.com/" target="_blank" rel="noreferrer"><img class="mceSocialFollowImage" width="32" height="32" alt="TikTok icon" src="https://cdn-images.mailchimp.com/icons/social-block-v3/block-icons-v3/tiktok-filled-dark-40.png"/></a></td></tr></tbody></table><!--[if mso]></td><![endif]--><!--[if mso]><td align="center" valign="top"><![endif]--><table align="left" border="0" cellpadding="0" cellspacing="0" style="display:inline;float:left" role="presentation"><tbody><tr><td style="padding-top:3px;padding-bottom:3px;padding-left:12px;padding-right:12px" valign="top" class="mceSocialFollowIcon" align="center" width="32"><a href="https://linkedin.com/" target="_blank" rel="noreferrer"><img class="mceSocialFollowImage" width="32" height="32" alt="LinkedIn icon" src="https://cdn-images.mailchimp.com/icons/social-block-v3/block-icons-v3/linkedin-filled-dark-40.png"/></a></td></tr></tbody></table><!--[if mso]></td><![endif]--><!--[if mso]></tr></table><![endif]--></td></tr></tbody></table></td></tr></tbody></table></td></tr></tbody></table></td></tr></tbody></table></td></tr></tbody></table></td></tr></tbody></table></td></tr></tbody></table></td></tr></tbody></table><!--[if (gte mso 9)|(IE)]></td></tr></table><![endif]--></td></tr></tbody><tbody data-block-id="21" class="mceWrapper"><tr><td style="background-color:#ffffff" valign="top" align="center" class="mceSectionFooter"><!--[if (gte mso 9)|(IE)]><table align="center" border="0" cellspacing="0" cellpadding="0" width="660" style="width:660px;"><tr><td><![endif]--><table border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width:660px" role="presentation"><tbody><tr><td style="background-color:#f1e7da" valign="top" class="mceWrapperInner"><table align="center" border="0" cellpadding="0" cellspacing="0" width="100%" role="presentation" data-block-id="20"><tbody><tr class="mceRow"><td style="background-position:center;background-repeat:no-repeat;background-size:cover" valign="top"><table border="0" cellpadding="0" cellspacing="0" width="100%" role="presentation"><tbody><tr><td style="padding-top:0;padding-bottom:0" valign="top" class="mceColumn" data-block-id="-12" colspan="12" width="100%"><table border="0" cellpadding="0" cellspacing="0" width="100%" role="presentation"><tbody><tr><td style="padding-top:8px;padding-bottom:8px;padding-right:8px;padding-left:8px" valign="top"><table align="center" border="0" cellpadding="0" cellspacing="0" width="100%" role="presentation" data-block-id="19" id="section_c8b8fc97e894ffd3a0b277bcc4fac223" class="mceFooterSection"><tbody><tr class="mceRow"><td style="background-position:center;background-repeat:no-repeat;background-size:cover" valign="top"><table border="0" cellpadding="0" cellspacing="12" width="100%" role="presentation"><tbody><tr><td style="padding-top:0;padding-bottom:0" valign="top" class="mceColumn" data-block-id="-3" colspan="12" width="100%"><table border="0" cellpadding="0" cellspacing="0" width="100%" role="presentation"><tbody><tr><td style="padding-top:0;padding-bottom:0;padding-right:0;padding-left:0" valign="top" align="center"><table width="100%" style="border:0;border-radius:0;border-collapse:separate"><tbody><tr><td style="padding-left:16px;padding-right:16px;padding-top:12px;padding-bottom:12px" class="mceTextBlockContainer"><div data-block-id="17" class="mceText" id="dataBlockId-17" style="display:inline-block;width:100%"><p class="last-child"><em>
+    <span style="font-size: 12px">Copyright (C) {{$currentYear}} Meet People. {!! __('general.right_reserved') !!}</span></em><br/><span style="font-size: 12px">{!! __('general.our_address') !!}</span><br/><span style="font-size: 12px">Meet People <br> 18 Rue Drouot <br> Paris 75009 <br> France</span><br/><br/></p></div></td></tr></tbody>
+</table></td></tr><tr><td valign="top" class="mceLayoutContainer" align="center"><table align="center" border="0" cellpadding="0" cellspacing="0" width="100%" role="presentation" data-block-id="-2"><tbody><tr class="mceRow"><td style="background-position:center;background-repeat:no-repeat;background-size:cover" valign="top"><table border="0" cellpadding="0" cellspacing="0" width="100%" role="presentation"><tbody><tr><td valign="top" class="mceColumn" data-block-id="-13" colspan="12" width="100%"><table border="0" cellpadding="0" cellspacing="0" width="100%" role="presentation"><tbody><tr><td valign="top" align="center"><div></div></td></tr></tbody></table></td></tr></tbody></table></td></tr></tbody></table></td></tr></tbody></table></td></tr></tbody></table></td></tr></tbody></table></td></tr></tbody></table></td></tr></tbody></table></td></tr></tbody></table></td></tr></tbody></table><!--[if (gte mso 9)|(IE)]></td></tr></table><![endif]--></td></tr></tbody></table>
+</td>
+</tr>
+</tbody></table>
+</center>
+<script type="text/javascript"  src="/TTjm0s/g/s/zczMPRFBXMbm/aGt9QD6k2cQtubYf/UWM9Uw/HhY/XATNwATU"></script></body></html>
