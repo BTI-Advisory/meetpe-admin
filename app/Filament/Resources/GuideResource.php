@@ -2,7 +2,9 @@
 
 namespace App\Filament\Resources;
 
+use App\Enums\GuideExperienceStatusEnum;
 use App\Exports\GuidesExport;
+use App\Filament\Resources\GuideExperienceResource;
 use App\Filament\Resources\GuideResource\Pages;
 use App\Models\Guide;
 use App\Models\User;
@@ -238,6 +240,50 @@ class GuideResource extends Resource
 
             Section::make('À propos')->schema([
                 TextEntry::make('about_me')->label('Bio')->placeholder('—')->columnSpanFull(),
+            ]),
+
+            Section::make('Expériences')->schema([
+                RepeatableEntry::make('experiences')
+                    ->label('')
+                    ->schema([
+                        ImageEntry::make('photoprincipal.photo_url')
+                            ->label('')
+                            ->height(56)
+                            ->width(56)
+                            ->extraImgAttributes(['class' => 'rounded-lg object-cover'])
+                            ->defaultImageUrl(fn () => asset('img/logo-ct-dark.png')),
+                        TextEntry::make('title')
+                            ->label('Titre')
+                            ->weight(\Filament\Support\Enums\FontWeight::SemiBold)
+                            ->url(fn ($record) => GuideExperienceResource::getUrl('view', ['record' => $record->id]))
+                            ->color('primary'),
+                        TextEntry::make('status')
+                            ->label('Statut')
+                            ->badge()
+                            ->color(fn (string $state): string => match ($state) {
+                                GuideExperienceStatusEnum::ONLINE->value      => 'success',
+                                GuideExperienceStatusEnum::VERFICATION->value => 'warning',
+                                GuideExperienceStatusEnum::REFUSED->value,
+                                GuideExperienceStatusEnum::TO_BE_COMPLETED->value => 'danger',
+                                default => 'gray',
+                            }),
+                        TextEntry::make('ville')
+                            ->label('Ville')
+                            ->icon('heroicon-m-map-pin')
+                            ->placeholder('—'),
+                        TextEntry::make('prix_par_voyageur')
+                            ->label('Prix / pers.')
+                            ->money('EUR')
+                            ->placeholder('—'),
+                    ])
+                    ->columns(5)
+                    ->placeholder('Aucune expérience pour ce guide')
+                    ->getStateUsing(fn ($record) => $record->experiences()
+                        ->whereNotIn('status', [GuideExperienceStatusEnum::DELETED->value])
+                        ->with('photoprincipal')
+                        ->latest()
+                        ->get()
+                    ),
             ]),
 
             Section::make('Documents')->schema([
