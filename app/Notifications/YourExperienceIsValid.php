@@ -91,9 +91,8 @@ class YourExperienceIsValid extends Notification
             })
             ->subject( __('general.experience_validated', ['experience' => $this->experienceName]))
             ->view(
-                'notifications.experience.'.App::getLocale().'_Ton_expérience_Meet_People_est_validée',
-                ["username" => $notifiable->name , "currentYear" => $now->year, "experienceName"=>$this->experienceName]
-
+                'notifications.experience.' . App::getLocale() . '_experience_validated',
+                ['username' => $notifiable->name, 'currentYear' => $now->year, 'experienceName' => $this->experienceName]
             );
     }
 

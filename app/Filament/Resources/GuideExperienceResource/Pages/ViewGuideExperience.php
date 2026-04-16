@@ -32,12 +32,8 @@ class ViewGuideExperience extends ViewRecord
                 ->color('success')
                 ->requiresConfirmation()
                 ->modalHeading('Valider cette expérience ?')
-                ->visible(fn () => in_array($this->record->status, [
-                    GuideExperienceStatusEnum::VERFICATION->value,
-                    GuideExperienceStatusEnum::TO_BE_COMPLETED->value,
-                    GuideExperienceStatusEnum::DOCUMENT->value,
-                    GuideExperienceStatusEnum::OFFLINE->value,
-                ]))
+                ->visible(fn () => $this->record->status !== GuideExperienceStatusEnum::ONLINE->value
+                    && $this->record->status !== GuideExperienceStatusEnum::DELETED->value)
                 ->action(function () {
                     $this->record->status = GuideExperienceStatusEnum::ONLINE->value;
                     $this->record->save();
