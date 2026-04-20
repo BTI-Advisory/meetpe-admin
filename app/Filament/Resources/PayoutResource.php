@@ -6,10 +6,12 @@ use App\Filament\Resources\PayoutResource\Pages;
 use App\Models\Payout;
 use Filament\Forms\Form;
 use Filament\Infolists\Components\Grid;
+use Filament\Infolists\Components\RepeatableEntry;
 use Filament\Infolists\Components\Section;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Infolists\Infolist;
 use Filament\Resources\Resource;
+use Filament\Tables\Actions\Action;
 use Filament\Tables\Actions\ViewAction;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\Filter;
@@ -39,8 +41,12 @@ class PayoutResource extends Resource
                     TextEntry::make('guide.user.name')->label('Guide')->placeholder('—'),
                     TextEntry::make('guide.user.email')->label('Email')->copyable()->placeholder('—'),
                     TextEntry::make('amount')
-                        ->label('Montant')
-                        ->state(fn (Payout $record) => number_format($record->amount / 100, 2, ',', ' ') . ' €'),
+                        ->label('Montant versé')
+                        ->state(fn (Payout $record) => number_format($record->amount, 2, ',', ' ') . ' €'),
+                    TextEntry::make('guide_percentage')
+                        ->label('% guide')
+                        ->state(fn (Payout $record) => $record->guide_percentage ? $record->guide_percentage . ' %' : '—')
+                        ->placeholder('—'),
                     TextEntry::make('payment_period')->label('Période')->placeholder('—'),
                     TextEntry::make('stripe_transfer_id')->label('Stripe Transfer ID')->copyable()->placeholder('—'),
                     TextEntry::make('paid_at')->label('Payé le')->dateTime('d/m/Y H:i')->placeholder('—'),
@@ -51,6 +57,29 @@ class PayoutResource extends Resource
                         ->placeholder('—'),
                 ]),
             ]),
+
+            Section::make('Virements échoués')
+                ->schema([
+                    RepeatableEntry::make('failedPayouts')
+                        ->label('')
+                        ->schema([
+                            TextEntry::make('month')->label('Mois')->placeholder('—'),
+                            TextEntry::make('status')
+                                ->label('Statut')
+                                ->badge()
+                                ->color(fn ($state) => $state === 'resolved' ? 'success' : 'danger'),
+                            TextEntry::make('failure_message')
+                                ->label("Raison de l'échec")
+                                ->placeholder('—')
+                                ->columnSpanFull(),
+                            TextEntry::make('stripe_account_id')
+                                ->label('Compte Stripe')
+                                ->copyable()
+                                ->placeholder('—'),
+                        ])
+                        ->columns(2),
+                ])
+                ->visible(fn ($record) => $record->failedPayouts->isNotEmpty()),
         ]);
     }
 
@@ -72,8 +101,13 @@ class PayoutResource extends Resource
 
                 TextColumn::make('amount')
                     ->label('Montant')
-                    ->state(fn (Payout $record) => number_format($record->amount / 100, 2, ',', ' ') . ' €')
+                    ->state(fn (Payout $record) => number_format($record->amount, 2, ',', ' ') . ' €')
                     ->sortable(),
+
+                TextColumn::make('guide_percentage')
+                    ->label('% guide')
+                    ->state(fn (Payout $record) => $record->guide_percentage ? $record->guide_percentage . ' %' : '—')
+                    ->placeholder('—'),
 
                 TextColumn::make('payment_period')
                     ->label('Période')
@@ -117,6 +151,29 @@ class PayoutResource extends Resource
             ])
             ->actions([
                 ViewAction::make()->label('Détail'),
+                Action::make('relancer')
+                    ->label('Relancer')
+                    ->icon('heroicon-o-arrow-path')
+                    ->color('warning')
+                    ->requiresConfirmation()
+                    ->modalHeading('Relancer ce virement ?')
+                    ->modalDescription('Un nouveau transfert Stripe sera tenté pour ce guide.')
+                    ->visible(fn (Payout $record) => $record->failedPayouts()->where('status', '!=', 'resolved')->exists())
+                    ->action(function (Payout $record) {
+                        try {
+                            app(\App\Services\StripeService::class)->retryPayout($record);
+                            \Filament\Notifications\Notification::make()
+                                ->title('Virement relancé avec succès')
+                                ->success()
+                                ->send();
+                        } catch (\Throwable $e) {
+                            \Filament\Notifications\Notification::make()
+                                ->title('Échec de la relance')
+                                ->body($e->getMessage())
+                                ->danger()
+                                ->send();
+                        }
+                    }),
             ])
             ->bulkActions([])
             ->defaultSort('paid_at', 'desc');

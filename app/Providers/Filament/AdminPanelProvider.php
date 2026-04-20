@@ -65,6 +65,7 @@ class AdminPanelProvider extends PanelProvider
                 \App\Filament\Widgets\ReservationStatusPieWidget::class,
             ])
             ->middleware([
+                \App\Http\Middleware\ExtendAdminTimeout::class,
                 EncryptCookies::class,
                 AddQueuedCookiesToResponse::class,
                 StartSession::class,

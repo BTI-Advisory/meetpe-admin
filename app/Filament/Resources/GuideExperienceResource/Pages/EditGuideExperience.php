@@ -4,9 +4,12 @@ namespace App\Filament\Resources\GuideExperienceResource\Pages;
 
 use App\Filament\Resources\GuideExperienceResource;
 use App\Models\GuidExperiencePhotos;
+use App\Models\Question;
+use App\Models\QuestionChoice;
 use App\Models\Responses;
 use App\Services\DeepLService;
 use Filament\Resources\Pages\EditRecord;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
@@ -17,24 +20,12 @@ class EditGuideExperience extends EditRecord
 
     /**
      * Avant d'afficher le formulaire :
+     * 
      * 1. Convertit les response IDs CSV → tableau de choice_ids pour les Select multiple
      * 2. Charge les photos existantes en convertissant les URLs S3 → chemins relatifs
      */
     protected function mutateFormDataBeforeFill(array $data): array
     {
-        // ── Catégories & langues ─────────────────────────────────────────────
-        foreach (['categorie', 'languages'] as $field) {
-            $raw = $this->record->getRawOriginal($field);
-            if (!empty($raw)) {
-                $responseIds  = array_filter(explode(',', $raw));
-                $data[$field] = Responses::whereIn('id', $responseIds)
-                    ->pluck('choice_id')
-                    ->toArray();
-            } else {
-                $data[$field] = [];
-            }
-        }
-
         // ── Photos ───────────────────────────────────────────────────────────
         $data['photo_principal'] = $this->urlToS3Path($this->record->photoprincipal?->photo_url);
         $data['photo_image_0']   = $this->urlToS3Path($this->record->image_1?->photo_url);
@@ -42,6 +33,25 @@ class EditGuideExperience extends EditRecord
         $data['photo_image_2']   = $this->urlToS3Path($this->record->image_3?->photo_url);
         $data['photo_image_3']   = $this->urlToS3Path($this->record->image_4?->photo_url);
         $data['photo_image_4']   = $this->urlToS3Path($this->record->image_5?->photo_url);
+
+        // ── Questions / Réponses ─────────────────────────────────────────────
+        $questions = Question::where('contexts', 'like', '%experience%')->get();
+
+        $existingChoices = DB::table('responses')
+            ->join('question_choices', 'responses.choice_id', '=', 'question_choices.id')
+            ->where('responses.entity', 'experience')
+            ->where('responses.entity_id', $this->record->id)
+            ->select('question_choices.question_id', 'responses.choice_id')
+            ->get()
+            ->groupBy('question_id');
+
+        foreach ($questions as $question) {
+            $data['response_q_' . $question->id] = $existingChoices
+                ->get($question->id, collect())
+                ->pluck('choice_id')
+                ->map(fn ($id) => (string) $id)
+                ->toArray();
+        }
 
         return $data;
     }
@@ -90,21 +100,43 @@ class EditGuideExperience extends EditRecord
             );
         }
 
-        // ── 2. Reconversion choice_ids → response IDs ────────────────────────
-        $userId = $this->record->user_id;
-        foreach (['categorie', 'languages'] as $field) {
-            if (!empty($data[$field]) && is_array($data[$field])) {
-                $responseIds = [];
-                foreach ($data[$field] as $choiceId) {
-                    $response = Responses::firstOrCreate(
-                        ['user_id' => $userId, 'choice_id' => (int) $choiceId]
-                    );
-                    $responseIds[] = $response->id;
-                }
-                $data[$field] = implode(',', $responseIds);
-            } else {
-                // Rien de sélectionné → conserver la valeur originale pour ne pas violer NOT NULL
-                $data[$field] = $this->record->getRawOriginal($field) ?? '';
+        // ── 2. Questions → responses (delete + recreate) ─────────────────────
+        $userId       = $this->record->user_id;
+        $experienceId = $this->record->id;
+
+        $questions = Question::where('contexts', 'like', '%experience%')->get();
+
+        foreach ($questions as $question) {
+            $fieldName = 'response_q_' . $question->id;
+            $choiceIds = array_map('intval', $data[$fieldName] ?? []);
+            unset($data[$fieldName]);
+
+            // Supprimer les anciennes réponses pour cette question+expérience
+            $oldChoiceIds = QuestionChoice::where('question_id', $question->id)->pluck('id');
+            Responses::where('entity', 'experience')
+                ->where('entity_id', $experienceId)
+                ->whereIn('choice_id', $oldChoiceIds)
+                ->delete();
+
+            // Créer les nouvelles réponses
+            $newResponseIds = [];
+            foreach ($choiceIds as $choiceId) {
+                $response = Responses::create([
+                    'user_id'     => $userId,
+                    'choice_id'   => $choiceId,
+                    'question_id' => $question->id,
+                    'entity'      => 'experience',
+                    'entity_id'   => $experienceId,
+                ]);
+                $newResponseIds[] = $response->id;
+            }
+
+            // Rétrocompatibilité : maintenir les colonnes CSV categorie et languages
+            if ($question->question_key === 'voyageur_experiences') {
+                $data['categorie'] = implode(',', $newResponseIds);
+            }
+            if ($question->question_key === 'languages_fr') {
+                $data['languages'] = implode(',', $newResponseIds);
             }
         }
 

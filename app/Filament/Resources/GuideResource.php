@@ -2,14 +2,12 @@
 
 namespace App\Filament\Resources;
 
-use App\Enums\GuideExperienceStatusEnum;
 use App\Exports\GuidesExport;
-use App\Filament\Resources\GuideExperienceResource;
 use App\Filament\Resources\GuideResource\Pages;
-use App\Models\Guide;
+use App\Filament\Resources\GuideResource\RelationManagers;
+use App\Models\Question;
+use App\Models\QuestionChoice;
 use App\Models\User;
-use App\Notifications\MailStripeConnectURLForGuide;
-use App\Services\StripeService;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Section as FormSection;
 use Filament\Forms\Components\Select;
@@ -18,27 +16,15 @@ use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
 use Filament\Forms\Form;
 use Filament\Forms\Get;
-use Filament\Infolists\Components\Grid;
-use Filament\Infolists\Components\ImageEntry;
-use Filament\Infolists\Components\RepeatableEntry;
-use Filament\Infolists\Components\Section;
-use Filament\Infolists\Components\TextEntry;
-use Filament\Infolists\Infolist;
-use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
-use Filament\Tables;
 use Filament\Tables\Actions\Action;
 use Filament\Tables\Actions\ViewAction;
-use Filament\Tables\Columns\BadgeColumn;
-use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\ImageColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\Filter;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Support\Facades\App;
-use Illuminate\Support\Facades\Log;
 use Maatwebsite\Excel\Facades\Excel;
 
 class GuideResource extends Resource
@@ -126,6 +112,24 @@ class GuideResource extends Resource
                     ->nullable(),
             ])->columns(2),
 
+            // ── Questions / Réponses ──────────────────────────────────────────
+            FormSection::make('Questions / Réponses')->schema(function () {
+                return Question::where('contexts', 'like', '%guide%')
+                    ->orderBy('id')
+                    ->get()
+                    ->map(fn ($question) => Select::make('response_q_' . $question->id)
+                        ->label($question->question_text)
+                        ->multiple()
+                        ->searchable()
+                        ->options(
+                            QuestionChoice::where('question_id', $question->id)
+                                ->orderBy('order_index')
+                                ->pluck('choice_txt', 'id')
+                                ->toArray()
+                        )
+                    )->toArray();
+            })->columns(2),
+
             FormSection::make('Statut du compte')->schema([
                 Select::make('guide_type')
                     ->label('Statut')
@@ -152,171 +156,6 @@ class GuideResource extends Resource
                     ->label('Compte actif')
                     ->default(true),
             ])->columns(2),
-        ]);
-    }
-
-    public static function infolist(Infolist $infolist): Infolist
-    {
-        return $infolist->schema([
-            Section::make('Profil')->schema([
-                Grid::make(3)->schema([
-                    ImageEntry::make('profile_path')
-                        ->label('Photo')
-                        ->disk('s3')
-                        ->circular()
-                        ->height(80)
-                        ->columnSpanFull(),
-                    TextEntry::make('name')->label('Nom'),
-                    TextEntry::make('email')->label('Email')->copyable(),
-                    TextEntry::make('phone_number')->label('Téléphone'),
-                    TextEntry::make('siren_number')->label('SIREN')->placeholder('—'),
-                    TextEntry::make('name_of_company')->label('Société')->placeholder('—'),
-                    TextEntry::make('is_tva_applicable')->label('Assujetti TVA')
-                        ->state(fn ($record) => $record->is_tva_applicable ? 'Oui' : 'Non'),
-                    TextEntry::make('ville')->label('Ville')->placeholder('—'),
-                    TextEntry::make('rue')->label('Rue')->placeholder('—'),
-                    TextEntry::make('code_postal')->label('Code postal')->placeholder('—'),
-                ]),
-            ]),
-
-            Section::make('Statut du compte')->schema([
-                Grid::make(3)->schema([
-                    TextEntry::make('guide_type_label')
-                        ->label('Type')
-                        ->state(fn ($record) => optional($record->Guide->first())->pro_local === 'pro' ? 'Professionnel' : 'Local')
-                        ->badge()
-                        ->color(fn ($state) => $state === 'Professionnel' ? 'info' : 'gray'),
-                    TextEntry::make('is_verified_account')->label('Compte vérifié')
-                        ->state(fn ($record) => $record->is_verified_account ? 'Vérifié' : 'Non vérifié')
-                        ->badge()
-                        ->color(fn ($state) => $state === 'Vérifié' ? 'success' : 'danger'),
-                    TextEntry::make('account_status')
-                        ->label('Statut')
-                        ->state(fn ($record) => $record->experiences()->where('status', 'en ligne')->exists() ? 'Actif' : 'Inactif')
-                        ->badge()
-                        ->color(fn ($state) => $state === 'Actif' ? 'success' : 'warning'),
-                    TextEntry::make('created_at')->label('Inscrit le')->date('d/m/Y'),
-                    TextEntry::make('experiences_count')
-                        ->label('Activités')
-                        ->state(fn ($record) => $record->experiences()->count()),
-                    TextEntry::make('revenue_total')
-                        ->label('CA total généré')
-                        ->state(fn ($record) => number_format(
-                            $record->experiences()
-                                ->join('reservations', 'guide_experiences.id', '=', 'reservations.experience_id')
-                                ->where('reservations.status', 'Acceptée')
-                                ->where('reservations.is_payed', true)
-                                ->sum('reservations.total_price') / 100,
-                            2, ',', ' '
-                        ) . ' €'),
-                ]),
-            ]),
-
-            Section::make('Stripe')->schema([
-                Grid::make(2)->schema([
-                    TextEntry::make('stripe_status')
-                        ->label('Statut Stripe Connect')
-                        ->badge()
-                        ->state(fn ($record) => optional($record->Guide->first())->stripe_connect_form_status)
-                        ->color(fn (?string $state) => match ($state) {
-                            'sent'    => 'success',
-                            'pending' => 'warning',
-                            default   => 'gray',
-                        })
-                        ->placeholder('Non configuré'),
-                    TextEntry::make('stripe_account_id')
-                        ->label('Stripe Account ID')
-                        ->state(fn ($record) => optional($record->Guide->first())->stripe_account_id)
-                        ->copyable()
-                        ->placeholder('—'),
-                    TextEntry::make('stripe_connect_form_url')
-                        ->label('Lien Stripe Connect')
-                        ->state(fn ($record) => optional($record->Guide->first())->stripe_connect_form_url)
-                        ->copyable()
-                        ->placeholder('—')
-                        ->columnSpanFull(),
-                ]),
-            ]),
-
-            Section::make('À propos')->schema([
-                TextEntry::make('about_me')->label('Bio')->placeholder('—')->columnSpanFull(),
-            ]),
-
-            Section::make('Expériences')->schema([
-                RepeatableEntry::make('experiences')
-                    ->label('')
-                    ->schema([
-                        ImageEntry::make('photoprincipal.photo_url')
-                            ->label('')
-                            ->height(56)
-                            ->width(56)
-                            ->extraImgAttributes(['class' => 'rounded-lg object-cover'])
-                            ->defaultImageUrl(fn () => asset('img/logo-ct-dark.png')),
-                        TextEntry::make('title')
-                            ->label('Titre')
-                            ->weight(\Filament\Support\Enums\FontWeight::SemiBold)
-                            ->url(fn ($record) => GuideExperienceResource::getUrl('view', ['record' => $record->id]))
-                            ->color('primary'),
-                        TextEntry::make('status')
-                            ->label('Statut')
-                            ->badge()
-                            ->color(fn (string $state): string => match ($state) {
-                                GuideExperienceStatusEnum::ONLINE->value      => 'success',
-                                GuideExperienceStatusEnum::VERFICATION->value => 'warning',
-                                GuideExperienceStatusEnum::REFUSED->value,
-                                GuideExperienceStatusEnum::TO_BE_COMPLETED->value => 'danger',
-                                default => 'gray',
-                            }),
-                        TextEntry::make('ville')
-                            ->label('Ville')
-                            ->icon('heroicon-m-map-pin')
-                            ->placeholder('—'),
-                        TextEntry::make('prix_par_voyageur')
-                            ->label('Prix / pers.')
-                            ->money('EUR')
-                            ->placeholder('—'),
-                    ])
-                    ->columns(5)
-                    ->placeholder('Aucune expérience pour ce guide')
-                    ->getStateUsing(fn ($record) => $record->experiences()
-                        ->whereNotIn('status', [GuideExperienceStatusEnum::DELETED->value])
-                        ->with('photoprincipal')
-                        ->latest()
-                        ->get()
-                    ),
-            ]),
-
-            Section::make('Documents')->schema([
-                Grid::make(3)->schema([
-                    ImageEntry::make('piece_d_identite')
-                        ->label("Pièce d'identité (recto)")
-                        ->disk('s3')
-                        ->height(200)
-                        ->placeholder('—'),
-                    ImageEntry::make('piece_d_identite_verso')
-                        ->label("Pièce d'identité (verso)")
-                        ->disk('s3')
-                        ->height(200)
-                        ->placeholder('—'),
-                    ImageEntry::make('KBIS_file')
-                        ->label('KBIS')
-                        ->disk('s3')
-                        ->height(200)
-                        ->placeholder('—'),
-                ]),
-
-                RepeatableEntry::make('otherDocuments')
-                    ->label('Autres documents')
-                    ->schema([
-                        TextEntry::make('document_title')->label('Titre')->placeholder('—'),
-                        ImageEntry::make('document_path')
-                            ->label('Document')
-                            ->disk('s3')
-                            ->height(200),
-                    ])
-                    ->columns(2)
-                    ->placeholder('Aucun document'),
-            ]),
         ]);
     }
 
@@ -438,6 +277,14 @@ class GuideResource extends Resource
             ])
             ->bulkActions([])
             ->defaultSort('created_at', 'desc');
+    }
+
+    public static function getRelations(): array
+    {
+        return [
+            RelationManagers\ExperiencesRelationManager::class,
+            RelationManagers\TrackingsRelationManager::class,
+        ];
     }
 
     public static function getPages(): array

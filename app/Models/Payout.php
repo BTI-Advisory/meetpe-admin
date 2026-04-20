@@ -10,10 +10,15 @@ class Payout extends Model
     use HasFactory;
     protected $table="payouts";
     protected $primaryKey = 'id';
-    protected $fillable = ["guide_id","stripe_transfer_id","invoice_url","amount","paid_at","payment_period"];
+    protected $fillable = ["guide_id","stripe_transfer_id","invoice_url","amount","paid_at","payment_period","guide_percentage"];
 
     public function guide()
     {
-        return $this->belongsTo(Guide::class,"guide_id");
-    } 
+        return $this->belongsTo(Guide::class, "guide_id");
+    }
+
+    public function failedPayouts()
+    {
+        return $this->hasMany(FailedPayout::class, "payout_id");
+    }
 }

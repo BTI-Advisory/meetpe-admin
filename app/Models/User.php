@@ -148,6 +148,16 @@ class User extends Authenticatable implements FilamentUser
         return $this->hasMany(Contact::class, 'user_id');
     }
 
+    public function userTrackings()
+    {
+        return $this->hasMany(UserTracking::class, 'user_id');
+    }
+
+    public function userTrackingArchives()
+    {
+        return $this->hasMany(UserTrackingArchive::class, 'user_id');
+    }
+
     public function getAgeAttribute(): int
     {
         if (!$this->birth_date) {

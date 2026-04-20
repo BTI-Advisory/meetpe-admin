@@ -41,7 +41,7 @@ class ReservationsRelationManager extends RelationManager
 
                 TextColumn::make('total_price')
                     ->label('Montant')
-                    ->money('EUR')
+                    ->money('EUR', divideBy: 1)
                     ->placeholder('—'),
 
                 TextColumn::make('status')

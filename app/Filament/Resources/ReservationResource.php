@@ -66,7 +66,7 @@ class ReservationResource extends Resource
                     TextEntry::make('experience.title')->label('Titre'),
                     TextEntry::make('experience.user.name')->label('Guide'),
                     TextEntry::make('experience.ville')->label('Ville'),
-                    TextEntry::make('experience.prix_par_voyageur')->label('Prix / voyageur')->money('EUR'),
+                    TextEntry::make('experience.prix_par_voyageur')->label('Prix / voyageur')->money('EUR', divideBy: 1),
                 ]),
             ]),
 
@@ -101,9 +101,9 @@ class ReservationResource extends Resource
                         }),
                     TextEntry::make('is_payed')->label('Payée')
                         ->state(fn ($record) => $record->is_payed ? 'Oui' : 'Non'),
-                    TextEntry::make('total_price')->label('Total')->money('EUR')->placeholder('—'),
-                    TextEntry::make('guide_payout_amount')->label('Reversement guide')->money('EUR')->placeholder('—'),
-                    TextEntry::make('commission_meetpe')->label('Commission MeetPe')->money('EUR')->placeholder('—'),
+                    TextEntry::make('total_price')->label('Total')->money('EUR', divideBy: 1)->placeholder('—'),
+                    TextEntry::make('guide_payout_amount')->label('Reversement guide')->money('EUR', divideBy: 1)->placeholder('—'),
+                    TextEntry::make('commission_meetpe')->label('Commission MeetPe')->money('EUR', divideBy: 1)->placeholder('—'),
                     TextEntry::make('stripe_payment_intent_id')->label('Payment Intent')->placeholder('—')->copyable(),
                 ]),
             ]),
@@ -114,7 +114,7 @@ class ReservationResource extends Resource
                         TextEntry::make('canceled_at')->label('Annulée le')->dateTime('d/m/Y H:i'),
                         TextEntry::make('cancel_reason')->label('Raison')->placeholder('—'),
                         TextEntry::make('cancel_description')->label('Description')->placeholder('—')->columnSpanFull(),
-                        TextEntry::make('refund_amount')->label('Remboursement')->money('EUR')->placeholder('—'),
+                        TextEntry::make('refund_amount')->label('Remboursement')->money('EUR', divideBy: 1)->placeholder('—'),
                         TextEntry::make('stripe_refund_status')->label('Statut remboursement')->placeholder('—'),
                     ]),
                 ])
@@ -177,7 +177,7 @@ class ReservationResource extends Resource
 
                 TextColumn::make('total_price')
                     ->label('Montant')
-                    ->money('EUR')
+                    ->money('EUR', divideBy: 1)
                     ->sortable()
                     ->placeholder('—'),
 
