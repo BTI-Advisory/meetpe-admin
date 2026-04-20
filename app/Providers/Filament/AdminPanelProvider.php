@@ -45,6 +45,12 @@ class AdminPanelProvider extends PanelProvider
                     '<script src="' . asset('js/address-autocomplete.js') . '?v=1"></script>'
                 )
             )
+            ->renderHook(
+                'panels::body.end',
+                fn () => \Illuminate\Support\Facades\Blade::render('@livewire(\'admin-notification-alert\')')
+            )
+            ->databaseNotifications()
+            ->databaseNotificationsPolling('30s')
             ->globalSearch(true)
             ->globalSearchKeyBindings(['command+k', 'ctrl+k'])
             ->navigationGroups([

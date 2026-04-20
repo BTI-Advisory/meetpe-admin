@@ -379,6 +379,13 @@ class GuideExperienceResource extends Resource
                         ->columns(2)
                         ->placeholder('Aucune réponse enregistrée'),
                 ]),
+
+            Section::make('Calendrier & Disponibilités')
+                ->icon('heroicon-o-calendar-days')
+                ->collapsible()
+                ->schema([
+                    \Filament\Infolists\Components\View::make('filament.infolists.experience-calendar'),
+                ]),
         ]);
     }
 
