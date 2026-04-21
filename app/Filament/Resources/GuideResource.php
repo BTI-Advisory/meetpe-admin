@@ -39,6 +39,7 @@ use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 use Maatwebsite\Excel\Facades\Excel;
 
 class GuideResource extends Resource
@@ -240,6 +241,16 @@ class GuideResource extends Resource
 
             Section::make('À propos')->schema([
                 TextEntry::make('about_me')->label('Bio')->placeholder('—')->columnSpanFull(),
+                TextEntry::make('about_me_audio')
+                    ->label('Bio audio')
+                    ->visible(fn ($record) => !empty($record->about_me_audio))
+                    ->formatStateUsing(fn () => 'Écouter la bio audio')
+                    ->url(fn ($record) => str_starts_with($record->about_me_audio ?? '', 'http')
+                        ? $record->about_me_audio
+                        : Storage::disk('s3')->url($record->about_me_audio))
+                    ->openUrlInNewTab()
+                    ->color('primary')
+                    ->columnSpanFull(),
             ]),
 
             Section::make('Expériences')->schema([
