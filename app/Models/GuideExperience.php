@@ -39,8 +39,8 @@ class GuideExperience extends Model
         "price_group_prive",
         "discount_kids_between_2_and_12",
         "dernier_minute_reservation",
-        "max_group_size"
-
+        "max_group_size",
+        "min_group_size_prive",
     ];
     public function getTitleForLocale(string $locale): string
     {
@@ -207,5 +207,36 @@ class GuideExperience extends Model
     public function avis()
     {
         return $this->hasMany(Avis::class, "experience_id");
+    }
+
+    public function conditions()
+    {
+        return $this->hasOne(ExperienceCondition::class, 'guide_experience_id');
+    }
+
+    public function paidOptions()
+    {
+        return $this->hasMany(ExperiencePaidOption::class, 'guide_experience_id');
+    }
+
+    public function infos()
+    {
+        return $this->hasMany(ExperienceInfo::class, 'guide_experience_id');
+    }
+
+    public function toBring()
+    {
+        return $this->infos()->where('type', 'to_bring');
+    }
+
+    public function goodToKnow()
+    {
+        return $this->infos()->where('type', 'good_to_know');
+    }
+
+    public function experienceResponses()
+    {
+        return $this->hasMany(Responses::class, 'entity_id')
+                    ->where('entity', 'experience');
     }
 }

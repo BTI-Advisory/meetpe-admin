@@ -9,9 +9,11 @@ use App\Models\Voyageur;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Form;
 use Filament\Infolists\Components\Grid;
+use Filament\Infolists\Components\RepeatableEntry;
 use Filament\Infolists\Components\Section;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Infolists\Infolist;
+use Illuminate\Support\Facades\DB;
 use Filament\Resources\Resource;
 use Filament\Tables\Actions\Action;
 use Filament\Tables\Actions\ViewAction;
@@ -72,6 +74,37 @@ class VoyageurResource extends Resource
                     TextEntry::make('user.created_at')->label('Inscrit le')->date('d/m/Y'),
                 ]),
             ]),
+            Section::make('Réponses au questionnaire')
+                ->icon('heroicon-o-chat-bubble-left-right')
+                ->collapsible()
+                ->schema([
+                    RepeatableEntry::make('questionnaire')
+                        ->label('')
+                        ->getStateUsing(function ($record) {
+                            return DB::table('responses')
+                                ->join('question_choices', 'responses.choice_id', '=', 'question_choices.id')
+                                ->join('questions', 'question_choices.question_id', '=', 'questions.id')
+                                ->where('responses.entity', 'voyageur')
+                                ->where('responses.entity_id', $record->voyageur_id)
+                                ->select('questions.id as question_id', 'questions.question_text as question', 'question_choices.choice_txt as reponse')
+                                ->orderBy('questions.id')
+                                ->get()
+                                ->groupBy('question')
+                                ->map(fn ($rows, $question) => [
+                                    'question' => $question,
+                                    'reponses' => $rows->pluck('reponse')->toArray(),
+                                ])
+                                ->values()
+                                ->toArray();
+                        })
+                        ->schema([
+                            TextEntry::make('question')->label('Question'),
+                            TextEntry::make('reponses')->label('Réponse(s)')->badge()->color('info')->separator(','),
+                        ])
+                        ->columns(2)
+                        ->placeholder('Aucune réponse enregistrée'),
+                ]),
+
             Section::make('Voyage')->schema([
                 Grid::make(3)->schema([
                     TextEntry::make('date_arrivee')->label('Arrivée')->date('d/m/Y'),
@@ -87,7 +120,11 @@ class VoyageurResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
-            ->query(Voyageur::with('user')->orderByDesc('created_at'))
+            ->query(
+                Voyageur::with('user')
+                    ->join('users', 'voyageurs.user_id', '=', 'users.id')
+                    ->select('voyageurs.*', 'users.created_at as user_created_at')
+            )
             ->columns([
                 TextColumn::make('user.name')
                     ->label('Nom')
@@ -118,7 +155,7 @@ class VoyageurResource extends Resource
                     ->state(fn (Voyageur $record) => $record->user?->is_verified_account ? 'Actif' : 'Inactif')
                     ->color(fn ($state) => $state === 'Actif' ? 'success' : 'danger'),
 
-                TextColumn::make('created_at')
+                TextColumn::make('user_created_at')
                     ->label('Inscrit le')
                     ->date('d/m/Y')
                     ->sortable(),
@@ -153,7 +190,7 @@ ViewAction::make()->label('Détail'),
                     ->action(fn () => Excel::download(new VoyageursExport(), 'voyageurs.xlsx')),
             ])
             ->bulkActions([])
-            ->defaultSort('created_at', 'desc');
+            ->defaultSort('user_created_at', 'desc');
     }
 
     public static function getRelationManagers(): array

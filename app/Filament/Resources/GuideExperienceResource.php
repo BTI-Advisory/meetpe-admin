@@ -20,6 +20,7 @@ use Filament\Forms\Form;
 use Filament\Forms\Get;
 use App\Filament\Infolist\Components\PhotoCarouselEntry;
 use Filament\Infolists\Components\Grid;
+use Filament\Infolists\Components\RepeatableEntry;
 use Filament\Infolists\Components\Section;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Infolists\Infolist;
@@ -38,6 +39,7 @@ use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\App;
+use Illuminate\Support\Facades\DB;
 
 class GuideExperienceResource extends Resource
 {
@@ -137,7 +139,7 @@ class GuideExperienceResource extends Resource
                 TextInput::make('prix_par_voyageur')
                     ->label('Prix / voyageur')
                     ->numeric()
-                    ->suffix('cts'),
+                    ->suffix('€'),
                 TextInput::make('nombre_des_voyageur')
                     ->label('Nb. voyageurs max')
                     ->numeric(),
@@ -153,7 +155,7 @@ class GuideExperienceResource extends Resource
                 TextInput::make('price_group_prive')
                     ->label('Prix par groupe')
                     ->numeric()
-                    ->suffix('cts')
+                    ->suffix('€')
                     ->visible(fn (Get $get) => (bool) $get('support_group_prive')),
                 TextInput::make('max_group_size')
                     ->label('Nb. max de personnes par groupe')
@@ -179,34 +181,23 @@ class GuideExperienceResource extends Resource
                 Hidden::make('lang'),
             ])->columns(2),
 
-            // ── Catégories & Langues ─────────────────────────────────────────
-            FormSection::make('Catégories & Langues')->schema([
-                Select::make('categorie')
-                    ->label('Catégories')
-                    ->multiple()
-                    ->searchable()
-                    ->options(function () {
-                        $question = Question::where('question_key', 'voyageur_experiences')->first();
-                        if (! $question) return [];
-                        return QuestionChoice::where('question_id', $question->id)
-                            ->pluck('choice_txt', 'id')
-                            ->toArray();
-                    })
-                    ->placeholder('Sélectionner des catégories'),
-
-                Select::make('languages')
-                    ->label('Langues')
-                    ->multiple()
-                    ->searchable()
-                    ->options(function () {
-                        $question = Question::where('question_key', 'languages_fr')->first();
-                        if (! $question) return [];
-                        return QuestionChoice::where('question_id', $question->id)
-                            ->pluck('choice_txt', 'id')
-                            ->toArray();
-                    })
-                    ->placeholder('Sélectionner des langues'),
-            ])->columns(2),
+            // ── Questions / Réponses ─────────────────────────────────────────
+            FormSection::make('Questions / Réponses')->schema(function () {
+                return Question::where('contexts', 'like', '%experience%')
+                    ->orderBy('id')
+                    ->get()
+                    ->map(fn ($question) => Select::make('response_q_' . $question->id)
+                        ->label($question->question_text)
+                        ->multiple()
+                        ->searchable()
+                        ->options(
+                            QuestionChoice::where('question_id', $question->id)
+                                ->orderBy('order_index')
+                                ->pluck('choice_txt', 'id')
+                                ->toArray()
+                        )
+                    )->toArray();
+            })->columns(2),
         ]);
     }
 
@@ -241,7 +232,7 @@ class GuideExperienceResource extends Resource
                             : '—'
                         )
                         ->placeholder('—'),
-                    TextEntry::make('prix_par_voyageur')->label('Prix / voyageur')->money('EUR'),
+                    TextEntry::make('prix_par_voyageur')->label('Prix / voyageur')->money('EUR', divideBy: 1),
                     TextEntry::make('description')->label('Description')->columnSpanFull(),
                     TextEntry::make('ville')->label('Ville'),
                     TextEntry::make('country')->label('Pays'),
@@ -264,7 +255,7 @@ class GuideExperienceResource extends Resource
                 Grid::make(3)->schema([
                     TextEntry::make('support_group_prive')->label('Groupe privé')
                         ->state(fn ($record) => $record->support_group_prive ? 'Oui' : 'Non'),
-                    TextEntry::make('price_group_prive')->label('Prix groupe privé')->money('EUR')
+                    TextEntry::make('price_group_prive')->label('Prix groupe privé')->money('EUR', divideBy: 1)
                         ->visible(fn ($record) => (bool) $record->support_group_prive),
                     TextEntry::make('max_group_size')->label('Groupe max')
                         ->visible(fn ($record) => (bool) $record->support_group_prive),
@@ -273,11 +264,128 @@ class GuideExperienceResource extends Resource
                 ]),
             ]),
 
+            Section::make('Conditions de participation')
+                ->schema([
+                    Grid::make(3)->schema([
+                        TextEntry::make('conditions.difficulty')
+                            ->label('Difficulté')
+                            ->placeholder('—'),
+                        TextEntry::make('conditions.pmr_accessible')
+                            ->label('Accessible PMR')
+                            ->state(fn ($record) => match($record->conditions?->pmr_accessible) {
+                                1, true, '1' => 'Oui',
+                                0, false, '0' => 'Non',
+                                default => '—',
+                            }),
+                        TextEntry::make('conditions.equipment_included')
+                            ->label('Équipement fourni')
+                            ->state(fn ($record) => match($record->conditions?->equipment_included) {
+                                1, true, '1' => 'Oui',
+                                0, false, '0' => 'Non',
+                                default => '—',
+                            }),
+                        TextEntry::make('conditions.outfit_required')
+                            ->label('Tenue requise')
+                            ->placeholder('—'),
+                        TextEntry::make('conditions.meal_included')
+                            ->label('Repas inclus')
+                            ->state(fn ($record) => match($record->conditions?->meal_included) {
+                                1, true, '1' => 'Oui',
+                                0, false, '0' => 'Non',
+                                default => '—',
+                            }),
+                    ]),
+                ])
+                ->visible(fn ($record) => $record->conditions !== null),
+
+            Section::make('Options payantes')
+                ->schema([
+                    RepeatableEntry::make('paidOptions')
+                        ->label('')
+                        ->schema([
+                            TextEntry::make('title')->label('Titre'),
+                            TextEntry::make('price_per_person')
+                                ->label('Prix / personne')
+                                ->money('EUR', divideBy: 1),
+                            TextEntry::make('description')
+                                ->label('Description')
+                                ->placeholder('—')
+                                ->columnSpanFull(),
+                            TextEntry::make('is_available')
+                                ->label('Disponible')
+                                ->state(fn ($record) => $record->is_available ? 'Oui' : 'Non')
+                                ->badge()
+                                ->color(fn ($state) => $state === 'Oui' ? 'success' : 'danger'),
+                        ])
+                        ->columns(2),
+                ])
+                ->visible(fn ($record) => $record->paidOptions->isNotEmpty()),
+
+            Section::make('À apporter')
+                ->schema([
+                    RepeatableEntry::make('toBring')
+                        ->label('')
+                        ->schema([
+                            TextEntry::make('content')->label('')->columnSpanFull(),
+                        ])
+                        ->columns(1),
+                ])
+                ->visible(fn ($record) => $record->toBring->isNotEmpty()),
+
+            Section::make('Bon à savoir')
+                ->schema([
+                    RepeatableEntry::make('goodToKnow')
+                        ->label('')
+                        ->schema([
+                            TextEntry::make('content')->label('')->columnSpanFull(),
+                        ])
+                        ->columns(1),
+                ])
+                ->visible(fn ($record) => $record->goodToKnow->isNotEmpty()),
+
             Section::make('Note de refus / correction')
                 ->schema([
                     TextEntry::make('raison')->label('Raison')->placeholder('—')->columnSpanFull(),
                 ])
                 ->visible(fn ($record) => !empty($record->raison)),
+
+            Section::make('Réponses au questionnaire')
+                ->icon('heroicon-o-chat-bubble-left-right')
+                ->collapsible()
+                ->schema([
+                    RepeatableEntry::make('questionnaire_experience')
+                        ->label('')
+                        ->getStateUsing(function ($record) {
+                            return DB::table('responses')
+                                ->join('question_choices', 'responses.choice_id', '=', 'question_choices.id')
+                                ->join('questions', 'question_choices.question_id', '=', 'questions.id')
+                                ->where('responses.entity', 'experience')
+                                ->where('responses.entity_id', $record->id)
+                                ->select('questions.id as question_id', 'questions.question_text as question', 'question_choices.choice_txt as reponse')
+                                ->orderBy('questions.id')
+                                ->get()
+                                ->groupBy('question')
+                                ->map(fn ($rows, $question) => [
+                                    'question' => $question,
+                                    'reponses' => $rows->pluck('reponse')->toArray(),
+                                ])
+                                ->values()
+                                ->toArray();
+                        })
+                        ->schema([
+                            TextEntry::make('question')->label('Question'),
+                            TextEntry::make('reponses')->label('Réponse(s)')->badge()->color('info')->separator(','),
+                        ])
+                        ->columns(2)
+                        ->placeholder('Aucune réponse enregistrée'),
+                ]),
+
+            Section::make('Calendrier & Disponibilités')
+                ->icon('heroicon-o-calendar-days')
+                ->collapsible()
+                ->schema([
+                    \Filament\Infolists\Components\View::make('filament.infolists.experience-calendar'),
+                ]),
         ]);
     }
 
@@ -286,7 +394,6 @@ class GuideExperienceResource extends Resource
         return $table
             ->query(
                 GuideExperience::with(['photoprincipal', 'user'])
-                    ->whereNotIn('status', [GuideExperienceStatusEnum::DELETED->value])
             )
             ->columns([
                 ImageColumn::make('photoprincipal.photo_url')
@@ -335,7 +442,7 @@ class GuideExperienceResource extends Resource
 
                 TextColumn::make('prix_par_voyageur')
                     ->label('Prix')
-                    ->money('EUR')
+                    ->money('EUR', divideBy: 1)
                     ->sortable()
                     ->placeholder('—'),
 
@@ -413,8 +520,8 @@ class GuideExperienceResource extends Resource
                     ])
                     ->query(function (Builder $query, array $data) {
                         $query
-                            ->when($data['prix_min'] ?? null, fn ($q) => $q->where('prix_par_voyageur', '>=', (int)$data['prix_min'] * 100))
-                            ->when($data['prix_max'] ?? null, fn ($q) => $q->where('prix_par_voyageur', '<=', (int)$data['prix_max'] * 100));
+                            ->when($data['prix_min'] ?? null, fn ($q) => $q->where('prix_par_voyageur', '>=', (float)$data['prix_min']))
+                            ->when($data['prix_max'] ?? null, fn ($q) => $q->where('prix_par_voyageur', '<=', (float)$data['prix_max']));
                     }),
             ])
             ->actions([
