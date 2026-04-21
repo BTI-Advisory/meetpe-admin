@@ -6,7 +6,6 @@ use App\Enums\ReservationStatus;
 use App\Filament\Resources\GuideResource;
 use App\Models\GuidExperiencePhotos;
 use App\Models\GuideExperience;
-use App\Models\Responses;
 use App\Notifications\MailStripeConnectURLForGuide;
 use App\Services\StripeService;
 use Filament\Actions\Action;
@@ -124,7 +123,6 @@ Action::make('stripe')
                             ->each(fn ($p) => $deleteS3($p->photo_url));
                         GuidExperiencePhotos::where('guide_experience_id', $exp->id)->delete();
 
-                        Responses::where('entity', 'experience')->where('entity_id', $exp->id)->delete();
                         $exp->likedExperiences()->delete();
                         DB::table('reservations')->where('experience_id', $exp->id)->delete();
 
@@ -138,7 +136,6 @@ Action::make('stripe')
 
                     // ── 2. Guide ──────────────────────────────────────────────
                     if ($guide) {
-                        Responses::where('entity', 'guide')->where('entity_id', $guide->guide_id)->delete();
                         $guide->failedPayouts()->delete();
                         $guide->delete();
                     }
