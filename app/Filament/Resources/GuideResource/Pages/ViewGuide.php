@@ -3,9 +3,13 @@
 namespace App\Filament\Resources\GuideResource\Pages;
 
 use App\Filament\Resources\GuideResource;
+use App\Enums\ReservationStatus;
 use App\Models\FailedPayout;
 use App\Models\Guide;
+use App\Models\GuidExperiencePhotos;
+use App\Models\GuideExperience;
 use App\Models\Payout;
+use App\Models\Responses;
 use App\Notifications\MailStripeConnectURLForGuide;
 use App\Services\StripeService;
 use Carbon\Carbon;
@@ -24,6 +28,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 use Stripe\Stripe;
 use Stripe\Transfer;
 
@@ -91,6 +96,96 @@ class ViewGuide extends ViewRecord
                     ));
                     Log::channel('notification_nails')->info('DASHBOARD_ACTION : Email Stripe renvoyé à ' . $this->record->email);
                     Notification::make()->title('Email Stripe renvoyé à ' . $this->record->name)->success()->send();
+                }),
+
+            Action::make('supprimer_guide')
+                ->label('Supprimer définitivement')
+                ->icon('heroicon-o-trash')
+                ->color('danger')
+                ->requiresConfirmation()
+                ->modalHeading('Supprimer ce guide définitivement ?')
+                ->modalDescription(fn () => 'Action irréversible. Toutes les expériences, photos S3, réponses, réservations et données du compte « ' . $this->record->name . ' » seront supprimées.')
+                ->modalSubmitActionLabel('Oui, supprimer définitivement')
+                ->visible(function () {
+                    $guide = $this->record->Guide->first();
+
+                    $hasActiveReservations = \App\Models\Reservation::whereHas('experience', fn ($q) => $q->where('user_id', $this->record->id))
+                        ->whereIn('status', [
+                            ReservationStatus::CREATED->value,
+                            ReservationStatus::ACCEPTÉE->value,
+                            ReservationStatus::PENDING->value,
+                        ])->exists();
+
+                    if ($hasActiveReservations) return false;
+                    if ($guide?->hasPayoutInProgress()) return false;
+
+                    return true;
+                })
+                ->action(function () {
+                    $user  = $this->record;
+                    $guide = $user->Guide->first();
+
+                    $deleteS3 = function (?string $url): void {
+                        if (empty($url)) return;
+                        try {
+                            $base = rtrim(Storage::disk('s3')->url(''), '/');
+                            $path = str_starts_with($url, $base . '/')
+                                ? substr($url, strlen($base) + 1)
+                                : ltrim(parse_url($url, PHP_URL_PATH) ?? '', '/');
+                            $bucket = config('filesystems.disks.s3.bucket', '');
+                            if ($bucket && str_starts_with($path, $bucket . '/')) {
+                                $path = substr($path, strlen($bucket) + 1);
+                            }
+                            if ($path) Storage::disk('s3')->delete($path);
+                        } catch (\Throwable $e) {
+                            Log::warning('DeleteGuide: S3 delete failed — ' . $e->getMessage());
+                        }
+                    };
+
+                    // ── 1. Expériences ────────────────────────────────────────
+                    GuideExperience::where('user_id', $user->id)->get()->each(function ($exp) use ($deleteS3) {
+                        GuidExperiencePhotos::where('guide_experience_id', $exp->id)->get()
+                            ->each(fn ($p) => $deleteS3($p->photo_url));
+                        GuidExperiencePhotos::where('guide_experience_id', $exp->id)->delete();
+
+                        Responses::where('entity', 'experience')->where('entity_id', $exp->id)->delete();
+                        $exp->conditions()->delete();
+                        $exp->paidOptions()->delete();
+                        $exp->infos()->delete();
+                        $exp->avis()->delete();
+                        $exp->likedExperiences()->delete();
+                        DB::table('reservations')->where('experience_id', $exp->id)->delete();
+
+                        $planningIds = $exp->plannings()->pluck('id');
+                        if ($planningIds->isNotEmpty()) {
+                            DB::table('experience_schedules')->whereIn('planning_id', $planningIds)->delete();
+                        }
+                        $exp->plannings()->delete();
+                        $exp->delete();
+                    });
+
+                    // ── 2. Guide ──────────────────────────────────────────────
+                    if ($guide) {
+                        Responses::where('entity', 'guide')->where('entity_id', $guide->guide_id)->delete();
+                        $guide->payouts()->delete();
+                        $guide->failedPayouts()->delete();
+                        $guide->delete();
+                    }
+
+                    // ── 3. Fichiers S3 + autres données utilisateur ───────────
+                    foreach (['profile_path', 'piece_d_identite', 'piece_d_identite_verso', 'KBIS_file', 'about_me_audio'] as $field) {
+                        $deleteS3($user->$field);
+                    }
+                    $user->otherDocuments->each(function ($doc) use ($deleteS3) {
+                        $deleteS3($doc->document_path);
+                        $doc->delete();
+                    });
+
+                    Log::info('DeleteGuide: Guide #' . $user->id . ' (' . $user->email . ') supprimé définitivement par admin');
+                    $user->delete();
+
+                    Notification::make()->title('Guide « ' . $user->name . ' » supprimé définitivement')->success()->send();
+                    $this->redirect(static::getResource()::getUrl('index'));
                 }),
 
             Action::make('retry_payout')
@@ -224,6 +319,16 @@ class ViewGuide extends ViewRecord
                         TextEntry::make('created_at')->label('Inscrit le')->date('d/m/Y'),
                     ]),
                     TextEntry::make('about_me')->label('Bio (FR)')->placeholder('—')->columnSpanFull(),
+                    TextEntry::make('about_me_audio')
+                        ->label('Bio audio')
+                        ->visible(fn ($record) => !empty($record->about_me_audio))
+                        ->formatStateUsing(fn () => 'Écouter la bio audio')
+                        ->url(fn ($record) => str_starts_with($record->about_me_audio ?? '', 'http')
+                            ? $record->about_me_audio
+                            : \Illuminate\Support\Facades\Storage::disk('s3')->url($record->about_me_audio))
+                        ->openUrlInNewTab()
+                        ->color('primary')
+                        ->columnSpanFull(),
                 ]),
 
             Section::make('Réponses au questionnaire')
