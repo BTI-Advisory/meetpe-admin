@@ -13,7 +13,17 @@ class ExperienceCalendar extends Component
 
     public function render()
     {
-        $record   = GuideExperience::find($this->experienceId);
+        $record = GuideExperience::find($this->experienceId);
+
+        if (! $record) {
+            return view('livewire.experience-calendar', [
+                'calId'       => 'exp-cal-' . $this->experienceId,
+                'events'      => [],
+                'initialDate' => now()->format('Y-m-d'),
+                'totalSlots'  => 0,
+            ]);
+        }
+
         $capacite = (int) ($record->nombre_des_voyageur ?? 0);
         $today    = now()->format('Y-m-d');
         $events   = [];
