@@ -27,7 +27,7 @@ class AdminPanelProvider extends PanelProvider
             ->default()
             ->id('admin')
             ->path('admin')
-            ->login()
+            ->login(\App\Filament\Pages\Auth\Login::class)
             ->darkMode(false)
             ->brandLogo(asset('img/LogoMeetpe.png'))
             ->brandLogoHeight('2rem')
