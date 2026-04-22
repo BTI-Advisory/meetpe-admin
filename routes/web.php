@@ -17,8 +17,7 @@ Route::get('/', fn () => redirect('/admin'));
 Route::get('stripe/connect/refresh/{accountId}', [StripeConnectController::class, 'refresh'])->name('account.refresh');
 Route::get('stripe/connect/return/{accountId}', [StripeConnectController::class, 'return'])->name('account.return');
 
-Route::get('login', [AuthenticatedSessionController::class, 'create'])->name('login');
-Route::post('login', [AuthenticatedSessionController::class, 'store']);
+Route::redirect('login', '/admin/login')->name('login');
 
 Route::middleware(['auth', 'admin'])->group(function () {
 
