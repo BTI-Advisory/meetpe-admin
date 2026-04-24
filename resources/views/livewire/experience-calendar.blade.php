@@ -72,14 +72,37 @@
                     eventClick: function (info) {
                         const p = info.event.extendedProps;
 
-                        const typeLabel = p.totalReserved === 0
-                            ? '<span style="color:#9ca3af">—</span>'
-                            : (p.isGroup
-                                ? '<span style="background:#dbeafe;color:#1d4ed8;padding:2px 8px;border-radius:4px;font-size:0.75rem;">Groupe</span>'
-                                : '<span style="background:#f3f4f6;color:#374151;padding:2px 8px;border-radius:4px;font-size:0.75rem;">Individuel</span>');
+                        // ── Type de réservation ──────────────────────────────
+                        let typeLabel;
+                        if (p.isGroup) {
+                            typeLabel = '<span style="background:#dbeafe;color:#1d4ed8;padding:2px 8px;border-radius:4px;font-size:0.75rem;">Groupe</span>';
+                        } else if (p.isGroupOnly) {
+                            typeLabel = '<span style="background:#ede9fe;color:#7c3aed;padding:2px 8px;border-radius:4px;font-size:0.75rem;">Groupe privé</span>';
+                        } else if (p.totalReserved > 0) {
+                            typeLabel = '<span style="background:#f3f4f6;color:#374151;padding:2px 8px;border-radius:4px;font-size:0.75rem;">Individuel</span>';
+                        } else {
+                            typeLabel = '<span style="color:#9ca3af">—</span>';
+                        }
 
-                        const remainColor = p.remaining === 0 ? '#dc2626' : (p.remaining <= 2 ? '#ea580c' : '#16a34a');
+                        // ── Places restantes ─────────────────────────────────
+                        let remainHtml;
+                        if (p.isGroupOnly) {
+                            remainHtml = `
+                                <div style="font-size:1.1rem;font-weight:600;color:#7c3aed;margin-top:4px;">Groupe</div>
+                                <div style="font-size:0.75rem;color:#6b7280;margin-top:2px;">privé uniquement</div>`;
+                        } else {
+                            const remainColor = p.remaining === 0 ? '#dc2626' : (p.remaining <= 2 ? '#ea580c' : '#16a34a');
+                            remainHtml = `
+                                <div style="font-size:1.5rem;font-weight:700;color:${remainColor};">${p.remaining}</div>
+                                <div style="font-size:0.75rem;color:#6b7280;margin-top:2px;">place${p.remaining > 1 ? 's' : ''} restante${p.remaining > 1 ? 's' : ''}</div>`;
+                        }
 
+                        // ── Capacité totale ──────────────────────────────────
+                        const capaciteLabel = p.isGroupOnly
+                            ? 'Groupe privé uniquement'
+                            : `Capacité totale : ${p.capacite} voyageur${p.capacite > 1 ? 's' : ''}`;
+
+                        // ── Couleur statut ───────────────────────────────────
                         const statusBg = {
                             'Disponible':     '#dcfce7', 'Disponible_t':     '#16a34a',
                             'Partiel':        '#ffedd5', 'Partiel_t':        '#ea580c',
@@ -87,7 +110,7 @@
                             'Groupe complet': '#fee2e2', 'Groupe complet_t': '#dc2626',
                             'Passé':          '#f3f4f6', 'Passé_t':          '#9ca3af',
                         };
-                        const sbg = statusBg[p.statusLabel]       || '#f3f4f6';
+                        const sbg = statusBg[p.statusLabel]        || '#f3f4f6';
                         const stx = statusBg[p.statusLabel + '_t'] || '#6b7280';
 
                         detailContent.innerHTML = `
@@ -106,8 +129,7 @@
                                     <div style="font-size:0.75rem;color:#6b7280;margin-top:2px;">voyageur${p.totalReserved > 1 ? 's' : ''} réservé${p.totalReserved > 1 ? 's' : ''}</div>
                                 </div>
                                 <div style="background:white;border:1px solid #e5e7eb;border-radius:8px;padding:12px;text-align:center;">
-                                    <div style="font-size:1.5rem;font-weight:700;color:${remainColor};">${p.remaining}</div>
-                                    <div style="font-size:0.75rem;color:#6b7280;margin-top:2px;">place${p.remaining > 1 ? 's' : ''} restante${p.remaining > 1 ? 's' : ''}</div>
+                                    ${remainHtml}
                                 </div>
                                 <div style="background:white;border:1px solid #e5e7eb;border-radius:8px;padding:12px;text-align:center;">
                                     <div style="font-size:1.1rem;font-weight:600;margin-top:2px;">${typeLabel}</div>
@@ -115,7 +137,7 @@
                                 </div>
                             </div>
                             <div style="margin-top:10px;font-size:0.75rem;color:#9ca3af;text-align:right;">
-                                Capacité totale : ${p.capacite} voyageur${p.capacite > 1 ? 's' : ''}
+                                ${capaciteLabel}
                             </div>
                         `;
                         detailPanel.style.display = 'block';
