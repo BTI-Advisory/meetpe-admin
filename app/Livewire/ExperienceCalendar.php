@@ -24,9 +24,10 @@ class ExperienceCalendar extends Component
             ]);
         }
 
-        $capacite = (int) ($record->nombre_des_voyageur ?? 0);
-        $today    = now()->format('Y-m-d');
-        $events   = [];
+        $capacite    = (int) ($record->nombre_des_voyageur ?? 0);
+        $isGroupOnly = $capacite === 0; // experience réservable uniquement en groupe privé
+        $today       = now()->format('Y-m-d');
+        $events      = [];
         $firstFuture = null;
 
         $plannings = $record->plannings()
@@ -35,7 +36,6 @@ class ExperienceCalendar extends Component
             ->get();
 
         $allReservations = Reservation::where('experience_id', $this->experienceId)
-            ->where('is_payed', true)
             ->where('status', 'Acceptée')
             ->get();
 
@@ -54,32 +54,47 @@ class ExperienceCalendar extends Component
 
                 $totalReserved = (int) $slotRes->sum('nombre_des_voyageurs');
                 $isGroup       = $slotRes->where('is_group', true)->isNotEmpty();
-                $remaining     = max(0, $capacite - $totalReserved);
                 $isPast        = $date < $today;
+
+                if ($isGroupOnly) {
+                    // Créneau complet uniquement si une résa groupe privé existe déjà
+                    $isFull    = $isGroup;
+                    $remaining = null;
+                } else {
+                    $remaining = max(0, $capacite - $totalReserved);
+                    $isFull    = $isGroup || $remaining === 0;
+                }
 
                 if (! $firstFuture && ! $isPast) {
                     $firstFuture = $date;
                 }
 
                 $colors = match (true) {
-                    $isPast                      => ['bg' => '#f3f4f6', 'text' => '#9ca3af', 'border' => '#d1d5db'],
-                    $isGroup || $remaining === 0 => ['bg' => '#fee2e2', 'text' => '#dc2626', 'border' => '#f87171'],
-                    $totalReserved === 0         => ['bg' => '#dcfce7', 'text' => '#16a34a', 'border' => '#4ade80'],
-                    default                      => ['bg' => '#ffedd5', 'text' => '#ea580c', 'border' => '#fb923c'],
+                    $isPast          => ['bg' => '#f3f4f6', 'text' => '#9ca3af', 'border' => '#d1d5db'],
+                    $isFull          => ['bg' => '#fee2e2', 'text' => '#dc2626', 'border' => '#f87171'],
+                    $totalReserved === 0 => ['bg' => '#dcfce7', 'text' => '#16a34a', 'border' => '#4ade80'],
+                    default          => ['bg' => '#ffedd5', 'text' => '#ea580c', 'border' => '#fb923c'],
                 };
 
                 $startF = substr($startTime, 0, 5);
                 $endF   = substr($endTime, 0, 5);
 
                 $statusLabel = match (true) {
-                    $isPast                      => 'Passé',
-                    $isGroup || $remaining === 0 => $isGroup ? 'Groupe complet' : 'Complet',
-                    $totalReserved === 0         => 'Disponible',
-                    default                      => 'Partiel',
+                    $isPast          => 'Passé',
+                    $isGroup         => 'Groupe complet',
+                    $isFull          => 'Complet',
+                    $totalReserved === 0 => 'Disponible',
+                    default          => 'Partiel',
                 };
 
+                if ($isGroupOnly) {
+                    $titleSuffix = $isGroup ? ' (groupe)' : '';
+                } else {
+                    $titleSuffix = $totalReserved > 0 ? " ({$totalReserved}/{$capacite})" : '';
+                }
+
                 $events[] = [
-                    'title'           => $startF . '–' . $endF . ($totalReserved > 0 ? " ({$totalReserved}/{$capacite})" : ''),
+                    'title'           => $startF . '–' . $endF . $titleSuffix,
                     'start'           => $date . 'T' . $startTime,
                     'end'             => $date . 'T' . $endTime,
                     'backgroundColor' => $colors['bg'],
@@ -89,9 +104,10 @@ class ExperienceCalendar extends Component
                         'dateLabel'     => Carbon::parse($date)->translatedFormat('l d F Y'),
                         'horaire'       => $startF . ' – ' . $endF,
                         'totalReserved' => $totalReserved,
-                        'capacite'      => $capacite,
+                        'capacite'      => $isGroupOnly ? null : $capacite,
                         'remaining'     => $remaining,
                         'isGroup'       => $isGroup,
+                        'isGroupOnly'   => $isGroupOnly,
                         'isPast'        => $isPast,
                         'statusLabel'   => $statusLabel,
                     ],
