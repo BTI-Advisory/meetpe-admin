@@ -108,6 +108,43 @@ class ReservationResource extends Resource
                 ]),
             ]),
 
+            Section::make('Options')
+                ->schema([
+                    TextEntry::make('paid_options_html')
+                        ->label('Options payantes choisies')
+                        ->state(function ($record) {
+                            $opts = $record->paidOptions;
+                            if ($opts->isEmpty()) return null;
+
+                            $rows = $opts->map(function ($o) {
+                                $title = $o->option?->title ?? '—';
+                                $qty   = $o->quantity;
+                                $price = number_format($o->total_price, 2, ',', ' ') . ' €';
+                                return "<tr style='border-top:1px solid #f3f4f6;'>
+                                    <td style='padding:6px 12px 6px 0;font-size:0.875rem;color:#111827;'>{$title}</td>
+                                    <td style='padding:6px 12px;font-size:0.875rem;color:#6b7280;text-align:center;'>{$qty}×</td>
+                                    <td style='padding:6px 0 6px 12px;font-size:0.875rem;font-weight:600;color:#111827;text-align:right;'>{$price}</td>
+                                </tr>";
+                            })->implode('');
+
+                            return "<table style='width:100%;border-collapse:collapse;'>
+                                <thead>
+                                    <tr>
+                                        <th style='padding:4px 12px 8px 0;font-size:0.75rem;color:#9ca3af;text-align:left;font-weight:500;'>Option</th>
+                                        <th style='padding:4px 12px 8px 12px;font-size:0.75rem;color:#9ca3af;text-align:center;font-weight:500;'>Qté</th>
+                                        <th style='padding:4px 0 8px 12px;font-size:0.75rem;color:#9ca3af;text-align:right;font-weight:500;'>Total</th>
+                                    </tr>
+                                </thead>
+                                <tbody>{$rows}</tbody>
+                            </table>";
+                        })
+                        ->html()
+                        ->placeholder('Aucune option payante sélectionnée')
+                        ->columnSpanFull(),
+
+                ])
+                ->visible(fn ($record) => $record->paidOptions->isNotEmpty()),
+
             Section::make('Annulation')
                 ->schema([
                     Grid::make(2)->schema([
@@ -126,7 +163,7 @@ class ReservationResource extends Resource
     {
         return $table
             ->query(
-                Reservation::with(['experience', 'experience.photoprincipal', 'experience.user', 'voyageur'])
+                Reservation::with(['experience', 'experience.photoprincipal', 'experience.user', 'voyageur', 'paidOptions', 'paidOptions.option'])
                     ->whereNotIn('status', [ReservationStatus::CREATED->value])
             )
             ->columns([
@@ -193,6 +230,12 @@ class ReservationResource extends Resource
                         ReservationStatus::PENDING->value   => 'warning',
                         default                             => 'gray',
                     }),
+
+                TextColumn::make('created_at')
+                    ->label('Créée le')
+                    ->dateTime('d/m/Y H:i')
+                    ->sortable()
+                    ->toggleable(),
             ])
             ->filters([
                 SelectFilter::make('status')
@@ -299,7 +342,7 @@ class ReservationResource extends Resource
                 ViewAction::make()->label('Détail'),
             ])
             ->bulkActions([])
-            ->defaultSort('date_time', 'desc');
+            ->defaultSort('created_at', 'desc');
     }
 
     public static function getPages(): array
