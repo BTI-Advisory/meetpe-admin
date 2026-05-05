@@ -25,6 +25,7 @@ use Filament\Tables\Filters\Filter;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\DB;
 use Maatwebsite\Excel\Facades\Excel;
 
 class GuideResource extends Resource
@@ -164,6 +165,16 @@ class GuideResource extends Resource
         return $table
             ->query(
                 User::whereHas('Guide')->with('Guide')
+                    ->addSelect([
+                        'users.*',
+                        'has_questionnaire' => DB::table('responses')
+                            ->selectRaw('1')
+                            ->where('responses.entity', 'guide')
+                            ->whereColumn('responses.entity_id', DB::raw(
+                                '(SELECT guide_id FROM guides WHERE guides.user_id = users.id LIMIT 1)'
+                            ))
+                            ->limit(1),
+                    ])
             )
             ->columns([
                 ImageColumn::make('profile_path')
@@ -177,6 +188,13 @@ class GuideResource extends Resource
                     ->label('Nom')
                     ->searchable()
                     ->sortable(),
+
+                TextColumn::make('questionnaire_alert')
+                    ->label('')
+                    ->badge()
+                    ->state(fn (User $record) => $record->has_questionnaire ? null : '⚠ Questionnaire incomplet')
+                    ->color('warning')
+                    ->placeholder(''),
 
                 TextColumn::make('email')
                     ->label('Email')
@@ -212,8 +230,9 @@ class GuideResource extends Resource
                     ->badge()
                     ->state(fn (User $record) => optional($record->Guide->first())->stripe_connect_form_status)
                     ->color(fn (?string $state): string => match ($state) {
-                        'sent'    => 'success',
+                        'sent'    => 'gray',
                         'pending' => 'warning',
+                        'success' => 'success',
                         default   => 'gray',
                     })
                     ->placeholder('Non configuré'),
@@ -224,6 +243,14 @@ class GuideResource extends Resource
                     ->sortable(),
             ])
             ->filters([
+                Filter::make('sans_questionnaire')
+                    ->label('Questionnaire non rempli')
+                    ->query(fn (Builder $query) => $query->whereRaw(
+                        'NOT EXISTS (SELECT 1 FROM responses WHERE responses.entity = ? AND responses.entity_id = (SELECT guide_id FROM guides WHERE guides.user_id = users.id LIMIT 1))',
+                        ['guide']
+                    ))
+                    ->toggle(),
+
                 SelectFilter::make('account_status')
                     ->label('Statut')
                     ->options([
