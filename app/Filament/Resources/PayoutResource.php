@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources;
 
+use App\Filament\Resources\GuideResource;
 use App\Filament\Resources\PayoutResource\Pages;
 use App\Models\Payout;
 use Filament\Forms\Form;
@@ -38,7 +39,8 @@ class PayoutResource extends Resource
         return $infolist->schema([
             Section::make('Détail du virement')->schema([
                 Grid::make(2)->schema([
-                    TextEntry::make('guide.user.name')->label('Guide')->placeholder('—'),
+                    TextEntry::make('guide.user.name')->label('Guide')->placeholder('—')
+                        ->url(fn ($record) => $record->guide?->user_id ? GuideResource::getUrl('view', ['record' => $record->guide->user_id]) : null),
                     TextEntry::make('guide.user.email')->label('Email')->copyable()->placeholder('—'),
                     TextEntry::make('amount')
                         ->label('Montant versé')
@@ -92,7 +94,8 @@ class PayoutResource extends Resource
                     ->label('Guide')
                     ->searchable()
                     ->sortable()
-                    ->placeholder('—'),
+                    ->placeholder('—')
+                    ->url(fn ($record) => $record->guide?->user_id ? GuideResource::getUrl('view', ['record' => $record->guide->user_id]) : null),
 
                 TextColumn::make('guide.user.email')
                     ->label('Email')

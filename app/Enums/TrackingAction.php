@@ -18,6 +18,9 @@ enum TrackingAction: string
     case RESERVATION_UPDATE = 'reservation.update';
     case RESERVATION_CANCEL = 'reservation.cancel';
 
+    case MATCHING         = 'matching';
+    case USER_SET_ROLE    = 'user.setRole';
+
     public function label(): string
     {
         return match ($this) {
@@ -32,6 +35,8 @@ enum TrackingAction: string
             self::RESERVATION_CREATE     => 'Création de réservation',
             self::RESERVATION_UPDATE     => 'Mise à jour de réservation',
             self::RESERVATION_CANCEL     => 'Annulation de réservation',
+            self::MATCHING               => 'Matching',
+            self::USER_SET_ROLE          => 'Attribution de rôle',
         };
     }
 
@@ -51,6 +56,9 @@ enum TrackingAction: string
 
             self::EXPERIENCE_DELETE,
             self::RESERVATION_CANCEL  => 'danger',
+
+            self::MATCHING            => 'warning',
+            self::USER_SET_ROLE       => 'gray',
         };
     }
 }

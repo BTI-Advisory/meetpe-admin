@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\VoyageurResource\RelationManagers;
 
 use App\Enums\ReservationStatus;
+use App\Filament\Resources\GuideExperienceResource;
 use Filament\Forms\Form;
 use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Tables\Columns\TextColumn;
@@ -24,7 +25,8 @@ class ReservationsRelationManager extends RelationManager
             ->columns([
                 TextColumn::make('experience.title')
                     ->label('Expérience')
-                    ->limit(30),
+                    ->limit(30)
+                    ->url(fn ($record) => $record->experience_id ? GuideExperienceResource::getUrl('view', ['record' => $record->experience_id]) : null),
 
                 TextColumn::make('experience.ville')
                     ->label('Ville')

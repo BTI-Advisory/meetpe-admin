@@ -167,6 +167,69 @@
     box-shadow: 0 0 0 3px rgba(255,76,0,0.12) !important;
 }
 
+/* ── Liens cliquables (infolist + tableau) ───────────── */
+
+/* TextEntry avec ->url() dans les infolists */
+.fi-in-text-item a[href],
+.fi-in-entry-wrp a[href]:not([class*="fi-btn"]):not([class*="fi-link"]) {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 5px !important;
+    color: #FF4C00 !important;
+    font-weight: 500 !important;
+    background: rgba(255,76,0,0.07) !important;
+    border: 1px solid rgba(255,76,0,0.22) !important;
+    border-radius: 20px !important;
+    padding: 3px 10px 3px 10px !important;
+    text-decoration: none !important;
+    transition: background 0.15s ease, border-color 0.15s ease !important;
+    font-size: 0.8rem !important;
+    white-space: nowrap !important;
+}
+
+.fi-in-text-item a[href]::after,
+.fi-in-entry-wrp a[href]:not([class*="fi-btn"]):not([class*="fi-link"])::after {
+    content: '↗' !important;
+    font-size: 0.7rem !important;
+    opacity: 0.65 !important;
+    margin-top: -1px !important;
+}
+
+.fi-in-text-item a[href]:hover,
+.fi-in-entry-wrp a[href]:not([class*="fi-btn"]):not([class*="fi-link"]):hover {
+    background: rgba(255,76,0,0.13) !important;
+    border-color: rgba(255,76,0,0.4) !important;
+    text-decoration: none !important;
+}
+
+/* TextColumn avec ->url() dans les tableaux */
+.fi-ta-text-item a[href] {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 5px !important;
+    color: #FF4C00 !important;
+    font-weight: 500 !important;
+    background: rgba(255,76,0,0.07) !important;
+    border: 1px solid rgba(255,76,0,0.22) !important;
+    border-radius: 20px !important;
+    padding: 2px 9px !important;
+    text-decoration: none !important;
+    transition: background 0.15s ease, border-color 0.15s ease !important;
+    font-size: 0.8rem !important;
+}
+
+.fi-ta-text-item a[href]::after {
+    content: '↗' !important;
+    font-size: 0.65rem !important;
+    opacity: 0.65 !important;
+}
+
+.fi-ta-text-item a[href]:hover {
+    background: rgba(255,76,0,0.13) !important;
+    border-color: rgba(255,76,0,0.4) !important;
+    text-decoration: none !important;
+}
+
 /* ── Login page ──────────────────────────────────────── */
 .fi-simple-main {
     background-color: #f7f7f5 !important;

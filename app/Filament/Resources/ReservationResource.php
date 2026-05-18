@@ -4,9 +4,13 @@ namespace App\Filament\Resources;
 
 use App\Enums\ReservationStatus;
 use App\Exports\ReservationsExport;
+use App\Filament\Resources\GuideExperienceResource;
+use App\Filament\Resources\GuideResource;
 use App\Filament\Resources\ReservationResource\Pages;
+use App\Filament\Resources\VoyageurResource;
 use App\Models\Reservation;
 use App\Models\User;
+use App\Models\Voyageur;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
@@ -63,8 +67,10 @@ class ReservationResource extends Resource
         return $infolist->schema([
             Section::make('Expérience')->schema([
                 Grid::make(2)->schema([
-                    TextEntry::make('experience.title')->label('Titre'),
-                    TextEntry::make('experience.user.name')->label('Guide'),
+                    TextEntry::make('experience.title')->label('Titre')
+                        ->url(fn ($record) => $record->experience_id ? GuideExperienceResource::getUrl('view', ['record' => $record->experience_id]) : null),
+                    TextEntry::make('experience.user.name')->label('Guide')
+                        ->url(fn ($record) => $record->experience?->user_id ? GuideResource::getUrl('view', ['record' => $record->experience->user_id]) : null),
                     TextEntry::make('experience.ville')->label('Ville'),
                     TextEntry::make('experience.prix_par_voyageur')->label('Prix / voyageur')->money('EUR', divideBy: 1),
                 ]),
@@ -74,7 +80,8 @@ class ReservationResource extends Resource
                 Grid::make(3)->schema([
                     TextEntry::make('voyageur.name')->label('Nom voyageur')
                         ->state(fn ($record) => $record->voyageur?->name ?? $record->nom)
-                        ->placeholder('—'),
+                        ->placeholder('—')
+                        ->url(fn ($record) => $record->voyageur_id ? VoyageurResource::getUrl('view', ['record' => Voyageur::where('user_id', $record->voyageur_id)->value('voyageur_id')]) : null),
                     TextEntry::make('phone')->label('Téléphone')
                         ->state(fn ($record) => $record->voyageur?->phone_number ?? $record->phone)
                         ->placeholder('—'),
@@ -178,11 +185,13 @@ class ReservationResource extends Resource
                     ->label('Expérience')
                     ->searchable()
                     ->sortable()
-                    ->limit(35),
+                    ->limit(35)
+                    ->url(fn ($record) => $record->experience_id ? GuideExperienceResource::getUrl('view', ['record' => $record->experience_id]) : null),
 
                 TextColumn::make('experience.user.name')
                     ->label('Guide')
-                    ->searchable(),
+                    ->searchable()
+                    ->url(fn ($record) => $record->experience?->user_id ? GuideResource::getUrl('view', ['record' => $record->experience->user_id]) : null),
 
                 TextColumn::make('voyageur_name')
                     ->label('Voyageur')
@@ -195,7 +204,8 @@ class ReservationResource extends Resource
                         ->leftJoin('users as vuser', 'reservations.voyageur_id', '=', 'vuser.id')
                         ->orderBy('vuser.name', $direction)
                     )
-                    ->placeholder('—'),
+                    ->placeholder('—')
+                    ->url(fn ($record) => $record->voyageur_id ? VoyageurResource::getUrl('view', ['record' => Voyageur::where('user_id', $record->voyageur_id)->value('voyageur_id')]) : null),
 
                 TextColumn::make('experience.ville')
                     ->label('Ville')

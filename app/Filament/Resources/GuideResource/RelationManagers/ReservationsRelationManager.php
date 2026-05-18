@@ -2,7 +2,10 @@
 
 namespace App\Filament\Resources\GuideResource\RelationManagers;
 
+use App\Filament\Resources\GuideExperienceResource;
+use App\Filament\Resources\VoyageurResource;
 use App\Models\Reservation;
+use App\Models\Voyageur;
 use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
@@ -33,11 +36,13 @@ class ReservationsRelationManager extends RelationManager
                 TextColumn::make('experience_title')
                     ->label('Expérience')
                     ->searchable()
-                    ->weight(\Filament\Support\Enums\FontWeight::SemiBold),
+                    ->weight(\Filament\Support\Enums\FontWeight::SemiBold)
+                    ->url(fn ($record) => $record->experience_id ? GuideExperienceResource::getUrl('view', ['record' => $record->experience_id]) : null),
 
                 TextColumn::make('voyageur_name')
                     ->label('Voyageur')
-                    ->searchable(),
+                    ->searchable()
+                    ->url(fn ($record) => $record->voyageur_id ? VoyageurResource::getUrl('view', ['record' => Voyageur::where('user_id', $record->voyageur_id)->value('voyageur_id')]) : null),
 
                 TextColumn::make('date_time')
                     ->label('Date')

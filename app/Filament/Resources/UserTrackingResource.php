@@ -59,12 +59,9 @@ class UserTrackingResource extends Resource
                 ->schema([
                     TextEntry::make('metadata')
                         ->label('')
-                        ->state(fn ($record) => $record->metadata
-                            ? json_encode($record->metadata, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE)
-                            : '—'
-                        )
-                        ->columnSpanFull()
-                        ->fontFamily('mono'),
+                        ->state(fn ($record) => self::renderMetadata($record->metadata))
+                        ->html()
+                        ->columnSpanFull(),
                 ])
                 ->visible(fn ($record) => !empty($record->metadata)),
         ]);
@@ -94,7 +91,7 @@ class UserTrackingResource extends Resource
                     ->label('Action')
                     ->badge()
                     ->color(fn ($record) => $record->action_color)
-                    ->searchable(query: fn (Builder $q, string $s) => $q->where('action', 'like', "%$s%")),
+                    ->searchable(query: fn (Builder $q, string $search) => $q->where('action', 'like', "%$search%")),
 
                 TextColumn::make('actor_type')
                     ->label('Acteur')
@@ -181,5 +178,46 @@ class UserTrackingResource extends Resource
             'index' => Pages\ListUserTrackings::route('/'),
             'view'  => Pages\ViewUserTracking::route('/{record}'),
         ];
+    }
+
+    public static function renderMetadata(?array $data): string
+    {
+        if (empty($data)) return '—';
+
+        $rows = '';
+        array_walk_recursive($data, function ($value, $key) use (&$rows) {});
+
+        $rows = self::buildMetadataRows($data);
+
+        return '<table style="width:100%;border-collapse:collapse;font-size:0.875rem;">'
+            . '<thead><tr>'
+            . '<th style="text-align:left;padding:6px 12px 6px 0;color:#9ca3af;font-weight:500;font-size:0.75rem;border-bottom:1px solid #f3f4f6;width:35%;">Clé</th>'
+            . '<th style="text-align:left;padding:6px 0;color:#9ca3af;font-weight:500;font-size:0.75rem;border-bottom:1px solid #f3f4f6;">Valeur</th>'
+            . '</tr></thead>'
+            . '<tbody>' . $rows . '</tbody>'
+            . '</table>';
+    }
+
+    private static function buildMetadataRows(array $data, string $prefix = ''): string
+    {
+        $html = '';
+        foreach ($data as $key => $value) {
+            $label = $prefix ? $prefix . '.' . $key : $key;
+            if (is_array($value)) {
+                $html .= self::buildMetadataRows($value, $label);
+            } else {
+                $display = htmlspecialchars((string) $value, ENT_QUOTES);
+                $isLong  = strlen($display) > 60;
+                $html .= '<tr style="border-bottom:1px solid #f9fafb;">'
+                    . '<td style="padding:7px 12px 7px 0;color:#6b7280;font-family:monospace;font-size:0.8rem;vertical-align:top;">'
+                    . htmlspecialchars($label, ENT_QUOTES)
+                    . '</td>'
+                    . '<td style="padding:7px 0;color:#111827;word-break:break-all;' . ($isLong ? 'font-size:0.8rem;' : '') . '">'
+                    . $display
+                    . '</td>'
+                    . '</tr>';
+            }
+        }
+        return $html;
     }
 }

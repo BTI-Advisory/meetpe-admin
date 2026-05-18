@@ -4,6 +4,7 @@ namespace App\Filament\Resources;
 
 use App\Enums\TrackingAction;
 use App\Filament\Resources\UserTrackingArchiveResource\Pages;
+use App\Filament\Resources\UserTrackingResource;
 use App\Models\UserTrackingArchive;
 use Filament\Forms\Form;
 use Filament\Infolists\Components\Grid;
@@ -58,12 +59,9 @@ class UserTrackingArchiveResource extends Resource
                 ->schema([
                     TextEntry::make('metadata')
                         ->label('')
-                        ->state(fn ($record) => $record->metadata
-                            ? json_encode($record->metadata, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE)
-                            : '—'
-                        )
-                        ->columnSpanFull()
-                        ->fontFamily('mono'),
+                        ->state(fn ($record) => UserTrackingResource::renderMetadata($record->metadata))
+                        ->html()
+                        ->columnSpanFull(),
                 ])
                 ->visible(fn ($record) => !empty($record->metadata)),
         ]);
