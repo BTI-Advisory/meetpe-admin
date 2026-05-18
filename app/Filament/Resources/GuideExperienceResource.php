@@ -4,6 +4,7 @@ namespace App\Filament\Resources;
 
 use App\Enums\GuideExperienceStatusEnum;
 use App\Filament\Resources\GuideExperienceResource\Pages;
+use App\Filament\Resources\GuideResource;
 use App\Models\GuideExperience;
 use App\Models\Question;
 use App\Models\QuestionChoice;
@@ -245,7 +246,8 @@ class GuideExperienceResource extends Resource
 
             Section::make('Guide')->schema([
                 Grid::make(3)->schema([
-                    TextEntry::make('user.name')->label('Nom'),
+                    TextEntry::make('user.name')->label('Nom')
+                        ->url(fn ($record) => $record->user_id ? GuideResource::getUrl('view', ['record' => $record->user_id]) : null),
                     TextEntry::make('user.email')->label('Email')->copyable(),
                     TextEntry::make('user.phone_number')->label('Téléphone'),
                 ]),
@@ -408,12 +410,14 @@ class GuideExperienceResource extends Resource
                     ->searchable()
                     ->sortable()
                     ->limit(35)
-                    ->tooltip(fn ($record) => $record->title),
+                    ->tooltip(fn ($record) => $record->title)
+                    ->url(fn ($record) => GuideExperienceResource::getUrl('view', ['record' => $record->id])),
 
                 TextColumn::make('user.name')
                     ->label('Guide')
                     ->searchable()
-                    ->sortable(),
+                    ->sortable()
+                    ->url(fn ($record) => $record->user_id ? GuideResource::getUrl('view', ['record' => $record->user_id]) : null),
 
                 TextColumn::make('ville')
                     ->label('Ville')

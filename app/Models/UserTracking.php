@@ -20,9 +20,18 @@ class UserTracking extends Model
         'timestamp',
     ];
 
-    protected $casts = [
-        'metadata' => 'array',
-    ];
+    protected $casts = [];
+
+    public function getMetadataAttribute($value): ?array
+    {
+        if (empty($value)) return null;
+        $base64   = json_decode($value) ?? $value;
+        $decoded  = base64_decode($base64);
+        if (empty($decoded)) return null;
+        $inflated = @zlib_decode($decoded);
+        if ($inflated === false) return null;
+        return json_decode($inflated, true);
+    }
 
     protected $appends = [
         'action_label',
