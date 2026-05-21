@@ -213,24 +213,38 @@ class GuideExperienceResource extends Resource
                     TextEntry::make('title')->label('Titre'),
                     TextEntry::make('status')->label('Statut')->badge()
                         ->color(fn (string $state): string => match ($state) {
-                            GuideExperienceStatusEnum::ONLINE->value      => 'success',
-                            GuideExperienceStatusEnum::VERFICATION->value => 'warning',
-                            GuideExperienceStatusEnum::REFUSED->value,
-                            GuideExperienceStatusEnum::TO_BE_COMPLETED->value => 'danger',
+                            GuideExperienceStatusEnum::ONLINE->value          => 'success',
+                            GuideExperienceStatusEnum::VERFICATION->value     => 'warning',
+                            GuideExperienceStatusEnum::TO_BE_COMPLETED->value => 'warning',
+                            GuideExperienceStatusEnum::REFUSED->value         => 'danger',
+                            GuideExperienceStatusEnum::DOCUMENT->value        => 'info',
+                            GuideExperienceStatusEnum::OFFLINE->value         => 'gray',
+                            GuideExperienceStatusEnum::ARCHIVED->value        => 'gray',
+                            GuideExperienceStatusEnum::DELETED->value         => 'danger',
                             default => 'gray',
                         }),
                     TextEntry::make('categorie')
                         ->label('Catégories')
-                        ->state(fn ($record) => $record->categorie
-                            ? Responses::getChoicesOf(array_filter(explode(',', $record->categorie)))->pluck('choix')->join(', ')
-                            : '—'
+                        ->state(fn ($record) =>
+                            DB::table('responses')
+                                ->join('question_choices', 'responses.choice_id', '=', 'question_choices.id')
+                                ->where('responses.entity', 'experience')
+                                ->where('responses.entity_id', $record->id)
+                                ->where('question_choices.question_id', 5)
+                                ->pluck('question_choices.choice_txt')
+                                ->join(', ') ?: '—'
                         )
                         ->placeholder('—'),
                     TextEntry::make('languages')
                         ->label('Langues')
-                        ->state(fn ($record) => $record->languages
-                            ? Responses::getChoicesOf(array_filter(explode(',', $record->languages)))->pluck('choix')->join(', ')
-                            : '—'
+                        ->state(fn ($record) =>
+                            DB::table('responses')
+                                ->join('question_choices', 'responses.choice_id', '=', 'question_choices.id')
+                                ->where('responses.entity', 'experience')
+                                ->where('responses.entity_id', $record->id)
+                                ->where('question_choices.question_id', 6)
+                                ->pluck('question_choices.choice_txt')
+                                ->join(', ') ?: '—'
                         )
                         ->placeholder('—'),
                     TextEntry::make('prix_par_voyageur')->label('Prix / voyageur')->money('EUR', divideBy: 1),
@@ -426,9 +440,14 @@ class GuideExperienceResource extends Resource
 
                 TextColumn::make('categorie')
                     ->label('Catégories')
-                    ->state(fn ($record) => $record->categorie
-                        ? Responses::getChoicesOf(array_filter(explode(',', $record->categorie)))->pluck('choix')->join(', ')
-                        : '—'
+                    ->state(fn ($record) =>
+                        DB::table('responses')
+                            ->join('question_choices', 'responses.choice_id', '=', 'question_choices.id')
+                            ->where('responses.entity', 'experience')
+                            ->where('responses.entity_id', $record->id)
+                            ->where('question_choices.question_id', 5)
+                            ->pluck('question_choices.choice_txt')
+                            ->join(', ') ?: '—'
                     )
                     ->wrap()
                     ->placeholder('—')
@@ -436,13 +455,18 @@ class GuideExperienceResource extends Resource
 
                 TextColumn::make('languages')
                     ->label('Langues')
-                    ->state(fn ($record) => $record->languages
-                        ? Responses::getChoicesOf(array_filter(explode(',', $record->languages)))->pluck('choix')->join(', ')
-                        : '—'
+                    ->state(fn ($record) =>
+                        DB::table('responses')
+                            ->join('question_choices', 'responses.choice_id', '=', 'question_choices.id')
+                            ->where('responses.entity', 'experience')
+                            ->where('responses.entity_id', $record->id)
+                            ->where('question_choices.question_id', 6)
+                            ->pluck('question_choices.choice_txt')
+                            ->join(', ') ?: '—'
                     )
                     ->wrap()
                     ->placeholder('—')
-                    ->toggleable(isToggledHiddenByDefault: true),
+                    ->toggleable(isToggledHiddenByDefault: false),
 
                 TextColumn::make('prix_par_voyageur')
                     ->label('Prix')
@@ -454,15 +478,20 @@ class GuideExperienceResource extends Resource
                     ->label('Statut')
                     ->badge()
                     ->sortable()
-                    ->color(fn (string $state): string => match ($state) {
-                        GuideExperienceStatusEnum::ONLINE->value          => 'success',
-                        GuideExperienceStatusEnum::VERFICATION->value     => 'warning',
-                        GuideExperienceStatusEnum::TO_BE_COMPLETED->value => 'danger',
-                        GuideExperienceStatusEnum::REFUSED->value         => 'danger',
-                        GuideExperienceStatusEnum::DOCUMENT->value        => 'info',
-                        GuideExperienceStatusEnum::OFFLINE->value         => 'gray',
-                        GuideExperienceStatusEnum::ARCHIVED->value        => 'gray',
-                        default                                           => 'gray',
+                    ->color(function ($state) {
+                        \Log::info('status_color_debug', ['state' => $state, 'type' => gettype($state)]);
+                        $map = [
+                            GuideExperienceStatusEnum::ONLINE->value          => 'success',
+                            GuideExperienceStatusEnum::VERFICATION->value     => 'warning',
+                            GuideExperienceStatusEnum::TO_BE_COMPLETED->value => 'warning',
+                            GuideExperienceStatusEnum::REFUSED->value         => 'danger',
+                            GuideExperienceStatusEnum::DOCUMENT->value        => 'info',
+                            GuideExperienceStatusEnum::OFFLINE->value         => 'gray',
+                            GuideExperienceStatusEnum::ARCHIVED->value        => 'gray',
+                            GuideExperienceStatusEnum::DELETED->value         => 'danger',
+                        ];
+                        $key = is_object($state) ? $state->value : (string) $state;
+                        return $map[$key] ?? 'gray';
                     }),
 
                 TextColumn::make('raison')

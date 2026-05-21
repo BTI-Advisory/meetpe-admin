@@ -34,8 +34,12 @@ class AdminPanelProvider extends PanelProvider
             ->favicon(asset('img/LogoMeetpe.png'))
             ->font('Inter', provider: \Filament\FontProviders\GoogleFontProvider::class)
             ->colors([
-                'primary' => Color::hex('#FF4C00'),
-                'gray'    => Color::hex('#6b7280'),
+                'primary'  => Color::hex('#FF4C00'),
+                'gray'     => Color::hex('#6b7280'),
+                'success'  => Color::hex('#22c55e'),
+                'warning'  => Color::hex('#f59e0b'),
+                'danger'   => Color::hex('#ef4444'),
+                'info'     => Color::hex('#0ea5e9'),
             ])
             ->renderHook(
                 'panels::head.end',
