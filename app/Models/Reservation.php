@@ -33,6 +33,10 @@ class Reservation extends Model
     public function experience(){
         return $this->belongsTo(GuideExperience::class,"experience_id");
     }
+
+    public function paidOptions(){
+        return $this->hasMany(BookingPaidOption::class, 'booking_id')->with('option');
+    }
     public function getStatusAttribute($value)
     {
         $locale = explode(',', request()->header('Accept-Language', 'fr'))[0];

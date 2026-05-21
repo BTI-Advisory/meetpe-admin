@@ -120,13 +120,6 @@ class ViewGuideExperience extends ViewRecord
                     $this->refreshFormData(['status']);
                     Notification::make()->title('Expérience archivée')->success()->send();
                 }),
-
-            Action::make('fichiers')
-                ->label('Fichiers')
-                ->icon('heroicon-o-folder-open')
-                ->color('gray')
-                ->url(fn () => route('guidesFiles', $this->record->user_id))
-                ->openUrlInNewTab(),
         ];
     }
 }

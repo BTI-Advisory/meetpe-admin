@@ -4,9 +4,13 @@ namespace App\Filament\Resources;
 
 use App\Enums\ReservationStatus;
 use App\Exports\ReservationsExport;
+use App\Filament\Resources\GuideExperienceResource;
+use App\Filament\Resources\GuideResource;
 use App\Filament\Resources\ReservationResource\Pages;
+use App\Filament\Resources\VoyageurResource;
 use App\Models\Reservation;
 use App\Models\User;
+use App\Models\Voyageur;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
@@ -63,10 +67,12 @@ class ReservationResource extends Resource
         return $infolist->schema([
             Section::make('Expérience')->schema([
                 Grid::make(2)->schema([
-                    TextEntry::make('experience.title')->label('Titre'),
-                    TextEntry::make('experience.user.name')->label('Guide'),
+                    TextEntry::make('experience.title')->label('Titre')
+                        ->url(fn ($record) => $record->experience_id ? GuideExperienceResource::getUrl('view', ['record' => $record->experience_id]) : null),
+                    TextEntry::make('experience.user.name')->label('Guide')
+                        ->url(fn ($record) => $record->experience?->user_id ? GuideResource::getUrl('view', ['record' => $record->experience->user_id]) : null),
                     TextEntry::make('experience.ville')->label('Ville'),
-                    TextEntry::make('experience.prix_par_voyageur')->label('Prix / voyageur')->money('EUR'),
+                    TextEntry::make('experience.prix_par_voyageur')->label('Prix / voyageur')->money('EUR', divideBy: 1),
                 ]),
             ]),
 
@@ -74,7 +80,8 @@ class ReservationResource extends Resource
                 Grid::make(3)->schema([
                     TextEntry::make('voyageur.name')->label('Nom voyageur')
                         ->state(fn ($record) => $record->voyageur?->name ?? $record->nom)
-                        ->placeholder('—'),
+                        ->placeholder('—')
+                        ->url(fn ($record) => $record->voyageur_id ? VoyageurResource::getUrl('view', ['record' => Voyageur::where('user_id', $record->voyageur_id)->value('voyageur_id')]) : null),
                     TextEntry::make('phone')->label('Téléphone')
                         ->state(fn ($record) => $record->voyageur?->phone_number ?? $record->phone)
                         ->placeholder('—'),
@@ -101,12 +108,49 @@ class ReservationResource extends Resource
                         }),
                     TextEntry::make('is_payed')->label('Payée')
                         ->state(fn ($record) => $record->is_payed ? 'Oui' : 'Non'),
-                    TextEntry::make('total_price')->label('Total')->money('EUR')->placeholder('—'),
-                    TextEntry::make('guide_payout_amount')->label('Reversement guide')->money('EUR')->placeholder('—'),
-                    TextEntry::make('commission_meetpe')->label('Commission MeetPe')->money('EUR')->placeholder('—'),
+                    TextEntry::make('total_price')->label('Total')->money('EUR', divideBy: 1)->placeholder('—'),
+                    TextEntry::make('guide_payout_amount')->label('Reversement guide')->money('EUR', divideBy: 1)->placeholder('—'),
+                    TextEntry::make('commission_meetpe')->label('Commission MeetPe')->money('EUR', divideBy: 1)->placeholder('—'),
                     TextEntry::make('stripe_payment_intent_id')->label('Payment Intent')->placeholder('—')->copyable(),
                 ]),
             ]),
+
+            Section::make('Options')
+                ->schema([
+                    TextEntry::make('paid_options_html')
+                        ->label('Options payantes choisies')
+                        ->state(function ($record) {
+                            $opts = $record->paidOptions;
+                            if ($opts->isEmpty()) return null;
+
+                            $rows = $opts->map(function ($o) {
+                                $title = $o->option?->title ?? '—';
+                                $qty   = $o->quantity;
+                                $price = number_format($o->total_price, 2, ',', ' ') . ' €';
+                                return "<tr style='border-top:1px solid #f3f4f6;'>
+                                    <td style='padding:6px 12px 6px 0;font-size:0.875rem;color:#111827;'>{$title}</td>
+                                    <td style='padding:6px 12px;font-size:0.875rem;color:#6b7280;text-align:center;'>{$qty}×</td>
+                                    <td style='padding:6px 0 6px 12px;font-size:0.875rem;font-weight:600;color:#111827;text-align:right;'>{$price}</td>
+                                </tr>";
+                            })->implode('');
+
+                            return "<table style='width:100%;border-collapse:collapse;'>
+                                <thead>
+                                    <tr>
+                                        <th style='padding:4px 12px 8px 0;font-size:0.75rem;color:#9ca3af;text-align:left;font-weight:500;'>Option</th>
+                                        <th style='padding:4px 12px 8px 12px;font-size:0.75rem;color:#9ca3af;text-align:center;font-weight:500;'>Qté</th>
+                                        <th style='padding:4px 0 8px 12px;font-size:0.75rem;color:#9ca3af;text-align:right;font-weight:500;'>Total</th>
+                                    </tr>
+                                </thead>
+                                <tbody>{$rows}</tbody>
+                            </table>";
+                        })
+                        ->html()
+                        ->placeholder('Aucune option payante sélectionnée')
+                        ->columnSpanFull(),
+
+                ])
+                ->visible(fn ($record) => $record->paidOptions->isNotEmpty()),
 
             Section::make('Annulation')
                 ->schema([
@@ -114,7 +158,7 @@ class ReservationResource extends Resource
                         TextEntry::make('canceled_at')->label('Annulée le')->dateTime('d/m/Y H:i'),
                         TextEntry::make('cancel_reason')->label('Raison')->placeholder('—'),
                         TextEntry::make('cancel_description')->label('Description')->placeholder('—')->columnSpanFull(),
-                        TextEntry::make('refund_amount')->label('Remboursement')->money('EUR')->placeholder('—'),
+                        TextEntry::make('refund_amount')->label('Remboursement')->money('EUR', divideBy: 1)->placeholder('—'),
                         TextEntry::make('stripe_refund_status')->label('Statut remboursement')->placeholder('—'),
                     ]),
                 ])
@@ -126,7 +170,7 @@ class ReservationResource extends Resource
     {
         return $table
             ->query(
-                Reservation::with(['experience', 'experience.photoprincipal', 'experience.user', 'voyageur'])
+                Reservation::with(['experience', 'experience.photoprincipal', 'experience.user', 'voyageur', 'paidOptions', 'paidOptions.option'])
                     ->whereNotIn('status', [ReservationStatus::CREATED->value])
             )
             ->columns([
@@ -141,11 +185,13 @@ class ReservationResource extends Resource
                     ->label('Expérience')
                     ->searchable()
                     ->sortable()
-                    ->limit(35),
+                    ->limit(35)
+                    ->url(fn ($record) => $record->experience_id ? GuideExperienceResource::getUrl('view', ['record' => $record->experience_id]) : null),
 
                 TextColumn::make('experience.user.name')
                     ->label('Guide')
-                    ->searchable(),
+                    ->searchable()
+                    ->url(fn ($record) => $record->experience?->user_id ? GuideResource::getUrl('view', ['record' => $record->experience->user_id]) : null),
 
                 TextColumn::make('voyageur_name')
                     ->label('Voyageur')
@@ -158,7 +204,8 @@ class ReservationResource extends Resource
                         ->leftJoin('users as vuser', 'reservations.voyageur_id', '=', 'vuser.id')
                         ->orderBy('vuser.name', $direction)
                     )
-                    ->placeholder('—'),
+                    ->placeholder('—')
+                    ->url(fn ($record) => $record->voyageur_id ? VoyageurResource::getUrl('view', ['record' => Voyageur::where('user_id', $record->voyageur_id)->value('voyageur_id')]) : null),
 
                 TextColumn::make('experience.ville')
                     ->label('Ville')
@@ -177,7 +224,7 @@ class ReservationResource extends Resource
 
                 TextColumn::make('total_price')
                     ->label('Montant')
-                    ->money('EUR')
+                    ->money('EUR', divideBy: 1)
                     ->sortable()
                     ->placeholder('—'),
 
@@ -193,6 +240,12 @@ class ReservationResource extends Resource
                         ReservationStatus::PENDING->value   => 'warning',
                         default                             => 'gray',
                     }),
+
+                TextColumn::make('created_at')
+                    ->label('Créée le')
+                    ->dateTime('d/m/Y H:i')
+                    ->sortable()
+                    ->toggleable(),
             ])
             ->filters([
                 SelectFilter::make('status')
@@ -299,7 +352,7 @@ class ReservationResource extends Resource
                 ViewAction::make()->label('Détail'),
             ])
             ->bulkActions([])
-            ->defaultSort('date_time', 'desc');
+            ->defaultSort('created_at', 'desc');
     }
 
     public static function getPages(): array

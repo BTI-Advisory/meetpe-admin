@@ -27,15 +27,19 @@ class AdminPanelProvider extends PanelProvider
             ->default()
             ->id('admin')
             ->path('admin')
-            ->login()
+            ->login(\App\Filament\Pages\Auth\Login::class)
             ->darkMode(false)
             ->brandLogo(asset('img/LogoMeetpe.png'))
             ->brandLogoHeight('2rem')
             ->favicon(asset('img/LogoMeetpe.png'))
             ->font('Inter', provider: \Filament\FontProviders\GoogleFontProvider::class)
             ->colors([
-                'primary' => Color::hex('#FF4C00'),
-                'gray'    => Color::hex('#6b7280'),
+                'primary'  => Color::hex('#FF4C00'),
+                'gray'     => Color::hex('#6b7280'),
+                'success'  => Color::hex('#22c55e'),
+                'warning'  => Color::hex('#f59e0b'),
+                'danger'   => Color::hex('#ef4444'),
+                'info'     => Color::hex('#0ea5e9'),
             ])
             ->renderHook(
                 'panels::head.end',
@@ -45,6 +49,12 @@ class AdminPanelProvider extends PanelProvider
                     '<script src="' . asset('js/address-autocomplete.js') . '?v=1"></script>'
                 )
             )
+            ->renderHook(
+                'panels::body.end',
+                fn () => \Illuminate\Support\Facades\Blade::render('@livewire(\'admin-notification-alert\')')
+            )
+            ->databaseNotifications()
+            ->databaseNotificationsPolling('30s')
             ->globalSearch(true)
             ->globalSearchKeyBindings(['command+k', 'ctrl+k'])
             ->navigationGroups([
@@ -65,6 +75,7 @@ class AdminPanelProvider extends PanelProvider
                 \App\Filament\Widgets\ReservationStatusPieWidget::class,
             ])
             ->middleware([
+                \App\Http\Middleware\ExtendAdminTimeout::class,
                 EncryptCookies::class,
                 AddQueuedCookiesToResponse::class,
                 StartSession::class,

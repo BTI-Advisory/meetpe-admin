@@ -3,7 +3,11 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\AvisResource\Pages;
+use App\Filament\Resources\GuideExperienceResource;
+use App\Filament\Resources\GuideResource;
+use App\Filament\Resources\VoyageurResource;
 use App\Models\Avis;
+use App\Models\Voyageur;
 use Filament\Forms\Form;
 use Filament\Infolists\Components\Grid;
 use Filament\Infolists\Components\Section;
@@ -40,10 +44,13 @@ class AvisResource extends Resource
         return $infolist->schema([
             Section::make('Détail de l\'avis')->schema([
                 Grid::make(2)->schema([
-                    TextEntry::make('user.name')->label('Voyageur'),
+                    TextEntry::make('user.name')->label('Voyageur')
+                        ->url(fn ($record) => $record->user_id ? VoyageurResource::getUrl('view', ['record' => Voyageur::where('user_id', $record->user_id)->value('voyageur_id')]) : null),
                     TextEntry::make('user.email')->label('Email')->copyable(),
-                    TextEntry::make('experience.title')->label('Expérience')->placeholder('—'),
-                    TextEntry::make('experience.user.name')->label('Guide')->placeholder('—'),
+                    TextEntry::make('experience.title')->label('Expérience')->placeholder('—')
+                        ->url(fn ($record) => $record->experience_id ? GuideExperienceResource::getUrl('view', ['record' => $record->experience_id]) : null),
+                    TextEntry::make('experience.user.name')->label('Guide')->placeholder('—')
+                        ->url(fn ($record) => $record->experience?->user_id ? GuideResource::getUrl('view', ['record' => $record->experience->user_id]) : null),
                     TextEntry::make('note')->label('Note')->suffix(' / 5'),
                     TextEntry::make('created_at')->label('Date')->dateTime('d/m/Y H:i'),
                     TextEntry::make('message')->label('Commentaire')->columnSpanFull()->placeholder('—'),
@@ -60,19 +67,22 @@ class AvisResource extends Resource
                 TextColumn::make('user.name')
                     ->label('Voyageur')
                     ->searchable()
-                    ->sortable(),
+                    ->sortable()
+                    ->url(fn ($record) => $record->user_id ? VoyageurResource::getUrl('view', ['record' => Voyageur::where('user_id', $record->user_id)->value('voyageur_id')]) : null),
 
                 TextColumn::make('experience.title')
                     ->label('Expérience')
                     ->searchable()
                     ->sortable()
                     ->limit(30)
-                    ->placeholder('—'),
+                    ->placeholder('—')
+                    ->url(fn ($record) => $record->experience_id ? GuideExperienceResource::getUrl('view', ['record' => $record->experience_id]) : null),
 
                 TextColumn::make('experience.user.name')
                     ->label('Guide')
                     ->searchable()
-                    ->placeholder('—'),
+                    ->placeholder('—')
+                    ->url(fn ($record) => $record->experience?->user_id ? GuideResource::getUrl('view', ['record' => $record->experience->user_id]) : null),
 
                 TextColumn::make('note')
                     ->label('Note')

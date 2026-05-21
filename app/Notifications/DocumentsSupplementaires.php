@@ -8,6 +8,9 @@ use Carbon\Carbon;
 use Illuminate\Bus\Queueable;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
+use NotificationChannels\Fcm\FcmChannel;
+use NotificationChannels\Fcm\FcmMessage;
+use NotificationChannels\Fcm\Resources\Notification as FcmNotification;
 use Symfony\Component\Mime\Email;
 use Illuminate\Support\Facades\App;
 
@@ -21,7 +24,24 @@ class DocumentsSupplementaires extends Notification
 
     public function via(object $notifiable): array
     {
-        return (new AppNotification())->AllowedChannelsByUser($notifiable->email, EnumNotificationType::NOTIFICATION_RESERVATION->value);
+        $channels = (new AppNotification())->AllowedChannelsByUser($notifiable->email, EnumNotificationType::NOTIFICATION_RESERVATION->value);
+        if (!empty($this->fcm_tokn)) {
+            $channels[] = FcmChannel::class;
+        }
+        return $channels;
+    }
+
+    public function toFcm($notifiable): FcmMessage
+    {
+        return (new FcmMessage(
+            notification: new FcmNotification(
+                title: 'Meet People',
+                body: __('general.experience_supp_doc'),
+            ),
+        ))->custom([
+            'android' => ['notification' => ['color' => '#FF4C00']],
+            'apns'    => ['notification' => ['sound' => 'default', 'badge' => '1']],
+        ]);
     }
 
     public function toMail(object $notifiable): MailMessage

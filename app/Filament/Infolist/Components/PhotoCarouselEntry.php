@@ -16,15 +16,12 @@ class PhotoCarouselEntry extends Entry
             return [];
         }
 
-        $record->loadMissing(['photoprincipal', 'image_1', 'image_2', 'image_3', 'image_4', 'image_5']);
-
-        return collect([
-            $record->photoprincipal?->photo_url,
-            $record->image_1?->photo_url,
-            $record->image_2?->photo_url,
-            $record->image_3?->photo_url,
-            $record->image_4?->photo_url,
-            $record->image_5?->photo_url,
-        ])->filter()->values()->toArray();
+        return \App\Models\GuidExperiencePhotos::where('guide_experience_id', $record->id)
+            ->orderByRaw("CASE WHEN type_image = 'principal' THEN 0 ELSE 1 END")
+            ->orderBy('id')
+            ->pluck('photo_url')
+            ->filter()
+            ->values()
+            ->toArray();
     }
 }

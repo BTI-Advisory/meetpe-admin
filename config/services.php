@@ -47,4 +47,11 @@ return [
         'list_id' => env('MAILCHIMP_LIST_ID'),
     ],
 
+    'social' => [
+        'instagram' => env('SOCIAL_INSTAGRAM', 'https://www.instagram.com/'),
+        'tiktok'    => env('SOCIAL_TIKTOK',    'https://www.tiktok.com/'),
+        'facebook'  => env('SOCIAL_FACEBOOK',  'https://www.facebook.com/'),
+        'linkedin'  => env('SOCIAL_LINKEDIN',  'https://www.linkedin.com/'),
+    ],
+
 ];
