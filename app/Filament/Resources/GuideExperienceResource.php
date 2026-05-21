@@ -38,7 +38,6 @@ use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\Filter;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
-use Filament\Support\Colors\Color;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\DB;
@@ -213,19 +212,15 @@ class GuideExperienceResource extends Resource
                         ->columnSpanFull(),
                     TextEntry::make('title')->label('Titre'),
                     TextEntry::make('status')->label('Statut')->badge()
-                        ->formatStateUsing(fn (string $state): string => match ($state) {
-                            GuideExperienceStatusEnum::DOCUMENT->value => 'Documents requis',
-                            default => $state,
-                        })
-                        ->color(fn (string $state): array|string => match ($state) {
-                            GuideExperienceStatusEnum::ONLINE->value      => 'success',
-                            GuideExperienceStatusEnum::VERFICATION->value => 'warning',
-                            GuideExperienceStatusEnum::TO_BE_COMPLETED->value => Color::hex('#f97316'),
-                            GuideExperienceStatusEnum::REFUSED->value     => 'danger',
-                            GuideExperienceStatusEnum::DOCUMENT->value    => Color::hex('#8b5cf6'),
-                            GuideExperienceStatusEnum::OFFLINE->value     => 'gray',
-                            GuideExperienceStatusEnum::ARCHIVED->value    => Color::hex('#64748b'),
-                            GuideExperienceStatusEnum::DELETED->value     => Color::hex('#374151'),
+                        ->color(fn (string $state): string => match ($state) {
+                            GuideExperienceStatusEnum::ONLINE->value          => 'success',
+                            GuideExperienceStatusEnum::VERFICATION->value     => 'warning',
+                            GuideExperienceStatusEnum::TO_BE_COMPLETED->value => 'warning',
+                            GuideExperienceStatusEnum::REFUSED->value         => 'danger',
+                            GuideExperienceStatusEnum::DOCUMENT->value        => 'info',
+                            GuideExperienceStatusEnum::OFFLINE->value         => 'gray',
+                            GuideExperienceStatusEnum::ARCHIVED->value        => 'gray',
+                            GuideExperienceStatusEnum::DELETED->value         => 'danger',
                             default => 'gray',
                         }),
                     TextEntry::make('categorie')
@@ -483,20 +478,20 @@ class GuideExperienceResource extends Resource
                     ->label('Statut')
                     ->badge()
                     ->sortable()
-                    ->formatStateUsing(fn (string $state): string => match ($state) {
-                        GuideExperienceStatusEnum::DOCUMENT->value => 'Documents requis',
-                        default => $state,
-                    })
-                    ->color(fn (string $state): array|string => match ($state) {
-                        GuideExperienceStatusEnum::ONLINE->value          => 'success',
-                        GuideExperienceStatusEnum::VERFICATION->value     => 'warning',
-                        GuideExperienceStatusEnum::TO_BE_COMPLETED->value => Color::hex('#f97316'),
-                        GuideExperienceStatusEnum::REFUSED->value         => 'danger',
-                        GuideExperienceStatusEnum::DOCUMENT->value        => Color::hex('#8b5cf6'),
-                        GuideExperienceStatusEnum::OFFLINE->value         => 'gray',
-                        GuideExperienceStatusEnum::ARCHIVED->value        => Color::hex('#64748b'),
-                        GuideExperienceStatusEnum::DELETED->value         => Color::hex('#374151'),
-                        default                                           => 'gray',
+                    ->color(function ($state) {
+                        \Log::info('status_color_debug', ['state' => $state, 'type' => gettype($state)]);
+                        $map = [
+                            GuideExperienceStatusEnum::ONLINE->value          => 'success',
+                            GuideExperienceStatusEnum::VERFICATION->value     => 'warning',
+                            GuideExperienceStatusEnum::TO_BE_COMPLETED->value => 'warning',
+                            GuideExperienceStatusEnum::REFUSED->value         => 'danger',
+                            GuideExperienceStatusEnum::DOCUMENT->value        => 'info',
+                            GuideExperienceStatusEnum::OFFLINE->value         => 'gray',
+                            GuideExperienceStatusEnum::ARCHIVED->value        => 'gray',
+                            GuideExperienceStatusEnum::DELETED->value         => 'danger',
+                        ];
+                        $key = is_object($state) ? $state->value : (string) $state;
+                        return $map[$key] ?? 'gray';
                     }),
 
                 TextColumn::make('raison')
