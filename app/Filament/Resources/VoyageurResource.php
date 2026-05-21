@@ -85,7 +85,7 @@ class VoyageurResource extends Resource
                                 ->join('question_choices', 'responses.choice_id', '=', 'question_choices.id')
                                 ->join('questions', 'question_choices.question_id', '=', 'questions.id')
                                 ->where('responses.entity', 'voyageur')
-                                ->where('responses.entity_id', $record->voyageur_id)
+                                ->where('responses.user_id', $record->user_id)
                                 ->select('questions.id as question_id', 'questions.question_text as question', 'question_choices.choice_txt as reponse')
                                 ->orderBy('questions.id')
                                 ->get()
@@ -99,7 +99,7 @@ class VoyageurResource extends Resource
                         })
                         ->schema([
                             TextEntry::make('question')->label('Question'),
-                            TextEntry::make('reponses')->label('Réponse(s)')->badge()->color('info')->separator(','),
+                            TextEntry::make('reponses')->label('Réponse(s)')->badge()->color('info'),
                         ])
                         ->columns(2)
                         ->placeholder('Aucune réponse enregistrée'),
