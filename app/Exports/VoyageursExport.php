@@ -3,55 +3,61 @@ namespace App\Exports;
 
 use Maatwebsite\Excel\Concerns\FromArray;
 use Maatwebsite\Excel\Concerns\WithHeadings;
-use App\Models\GuideExperience;
 use App\Models\Voyageur;
-use App\Enums\GuideExperienceStatusEnum;
 use App\Enums\ReservationStatus;
-use App\Models\Responses;
+use Illuminate\Support\Facades\DB;
 
 class VoyageursExport implements FromArray, WithHeadings
 {
-
-
     public function array(): array
     {
-        $rows = [];
-    
-        // Récupération des voyageurs avec leur user + leurs réservations
         $voyageurs = Voyageur::whereHas('user')
             ->with(['user', 'reservations'])
-            ->orderByDesc("created_at")
+            ->orderByDesc('created_at')
             ->get();
-    
+
+        $userIds = $voyageurs->pluck('user_id')->filter()->values()->toArray();
+
+        // Charge toutes les réponses en une seule requête
+        $allResponses = DB::table('responses')
+            ->join('question_choices', 'responses.choice_id', '=', 'question_choices.id')
+            ->whereIn('responses.user_id', $userIds)
+            ->where('responses.entity', 'voyageur')
+            ->select('responses.user_id', 'question_choices.question_id', 'question_choices.choice_txt')
+            ->get()
+            ->groupBy('user_id');
+
+        $rows = [];
+
         foreach ($voyageurs as $voyageur) {
-            $user = $voyageur->user;
+            $user        = $voyageur->user;
             $reservations = $voyageur->reservations ?? collect();
-    
+            $responses   = $allResponses->get($voyageur->user_id, collect())->groupBy('question_id');
+
+            $get = fn (int $qid) => $responses->get($qid, collect())->pluck('choice_txt')->implode(', ');
+
             $rows[] = [
                 $user->name ?? '',
                 $user->email ?? '',
                 $user->phone_number ?? '',
-                $user->age,
+                $user->age ?? '',
                 $user->created_at ? $user->created_at->format('Y-m-d') : '',
 
-                // Réponses multiples formatées
-                Responses::getChoicesOf(explode(',', $voyageur->personnalite ?? ''))->pluck('choix')->implode("\n"),
-                Responses::getChoicesOf(explode(',', $voyageur->preference ?? ''))->pluck('choix')->implode("\n"),
-                Responses::getChoicesOf(explode(',', $voyageur->mode ?? ''))->pluck('choix')->implode("\n"),
-                Responses::getChoicesOf(explode(',', $voyageur->type ?? ''))->pluck('choix')->implode("\n"),
-                Responses::getChoicesOf(explode(',', $voyageur->languages ?? ''))->pluck('choix')->implode("\n"),
-                Responses::getChoicesOf(explode(',', $voyageur->experiences ?? ''))->pluck('choix')->implode("\n"),
+                $get(2),   // Comment tu voyages ?
+                $get(5),   // Il y a des sujets qui te plaisent ?
+                $get(6),   // Tu maitrises quelles langues ?
+                $get(17),  // Comment tu te déplaces ?
 
                 $voyageur->date_arrivee ?? '',
                 $voyageur->date_depart ?? '',
-                $voyageur->ville.' '.$voyageur->pays,
-    
+                trim(($voyageur->ville ?? '') . ' ' . ($voyageur->pays ?? '')),
+
                 $reservations->count(),
                 $reservations->where('status', ReservationStatus::ARCHIVÉE->value)->count(),
-                $reservations->where('status', ReservationStatus::ANNULÉE->value)->count()
+                $reservations->where('status', ReservationStatus::ANNULÉE->value)->count(),
             ];
         }
-    
+
         return $rows;
     }
 
@@ -62,22 +68,17 @@ class VoyageursExport implements FromArray, WithHeadings
             'Email',
             'Téléphone',
             'Âge',
-            'Compte crée le',
-
-            'Personnalité',
-            'Préferences',
-            'Modes',
-            'Avec Qui?',
-            'Languages',
-            'Types des expériences',
-
-            'Dates d\'arrivé',
-            'Date de depart',
+            'Compte créé le',
+            'Comment tu voyages ?',
+            'Sujets préférés',
+            'Langues',
+            'Déplacement',
+            'Date d\'arrivée',
+            'Date de départ',
             'Destination',
-
-            'Nombre total des reservations',
-            'Nombre des reservations réalisées',
-            'Nombre des reservations annulées'
+            'Nb total réservations',
+            'Nb réservations réalisées',
+            'Nb réservations annulées',
         ];
     }
 }
