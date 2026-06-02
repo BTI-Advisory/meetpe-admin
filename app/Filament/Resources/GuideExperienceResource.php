@@ -273,6 +273,8 @@ class GuideExperienceResource extends Resource
                         ->state(fn ($record) => $record->support_group_prive ? 'Oui' : 'Non'),
                     TextEntry::make('price_group_prive')->label('Prix groupe privé')->money('EUR', divideBy: 1)
                         ->visible(fn ($record) => (bool) $record->support_group_prive),
+                    TextEntry::make('min_group_size_prive')->label('Groupe min')
+                        ->visible(fn ($record) => (bool) $record->support_group_prive),
                     TextEntry::make('max_group_size')->label('Groupe max')
                         ->visible(fn ($record) => (bool) $record->support_group_prive),
                     TextEntry::make('discount_kids_between_2_and_12')->label('Réduction enfants')
@@ -626,14 +628,39 @@ class GuideExperienceResource extends Resource
                 ])->label('Actions')->icon('heroicon-m-ellipsis-vertical'),
             ])
             ->headerActions([
-                Action::make('export')
-                    ->label('Exporter')
+                Action::make('export_by_status')
+                    ->label(function (\Livewire\Component $livewire) {
+                        $labels = [
+                            'en_ligne'       => 'En ligne',
+                            'verification'   => 'En vérification',
+                            'a_completer'    => 'À compléter',
+                            'autre_document' => 'Doc. supplémentaire',
+                            'hors_ligne'     => 'Hors ligne',
+                            'refusee'        => 'Refusées',
+                            'archivee'       => 'Archivées',
+                            'supprimee'      => 'Supprimées',
+                        ];
+                        $tab = $livewire->activeTab ?? 'verification';
+                        return 'Exporter statut : ' . ($labels[$tab] ?? $tab);
+                    })
                     ->icon('heroicon-o-arrow-down-tray')
-                    ->color('success')
-                    ->action(function () {
+                    ->color('gray')
+                    ->action(function (\Livewire\Component $livewire) {
+                        $map = [
+                            'en_ligne'       => \App\Enums\GuideExperienceStatusEnum::ONLINE->value,
+                            'verification'   => \App\Enums\GuideExperienceStatusEnum::VERFICATION->value,
+                            'a_completer'    => \App\Enums\GuideExperienceStatusEnum::TO_BE_COMPLETED->value,
+                            'autre_document' => \App\Enums\GuideExperienceStatusEnum::DOCUMENT->value,
+                            'hors_ligne'     => \App\Enums\GuideExperienceStatusEnum::OFFLINE->value,
+                            'refusee'        => \App\Enums\GuideExperienceStatusEnum::REFUSED->value,
+                            'archivee'       => \App\Enums\GuideExperienceStatusEnum::ARCHIVED->value,
+                            'supprimee'      => \App\Enums\GuideExperienceStatusEnum::DELETED->value,
+                        ];
+                        $status = $map[$livewire->activeTab ?? 'verification']
+                            ?? \App\Enums\GuideExperienceStatusEnum::VERFICATION->value;
                         return \Maatwebsite\Excel\Facades\Excel::download(
-                            new \App\Exports\ExperiencesExport(''),
-                            'experiences.xlsx'
+                            new \App\Exports\ExperiencesExport($status),
+                            'experiences-' . $status . '.xlsx'
                         );
                     }),
             ])

@@ -19,12 +19,11 @@ class ListGuideExperiences extends ListRecords
     {
         return [
             Action::make('export')
-                ->label('Exporter')
+                ->label('Exporter toutes les expériences')
                 ->icon('heroicon-o-arrow-down-tray')
                 ->color('success')
                 ->action(function () {
-                    $status = $this->activeTab ?? GuideExperienceStatusEnum::VERFICATION->value;
-                    return Excel::download(new ExperiencesExport($status), 'experiences-' . $status . '.xlsx');
+                    return Excel::download(new ExperiencesExport(''), 'experiences-all.xlsx');
                 }),
         ];
     }
