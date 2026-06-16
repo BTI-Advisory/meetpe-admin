@@ -79,6 +79,7 @@ class GuideExperienceResource extends Resource
                     ->directory('experience_photos')
                     ->visibility('public')
                     ->required()
+                    ->maxSize(20480)
                     ->imagePreviewHeight('160')
                     ->columnSpanFull(),
                 FileUpload::make('photo_image_0')
@@ -88,6 +89,7 @@ class GuideExperienceResource extends Resource
                     ->directory('experience_photos')
                     ->visibility('public')
                     ->deletable()
+                    ->maxSize(20480)
                     ->imagePreviewHeight('120'),
                 FileUpload::make('photo_image_1')
                     ->label('Photo 3')
@@ -96,6 +98,7 @@ class GuideExperienceResource extends Resource
                     ->directory('experience_photos')
                     ->visibility('public')
                     ->deletable()
+                    ->maxSize(20480)
                     ->imagePreviewHeight('120'),
                 FileUpload::make('photo_image_2')
                     ->label('Photo 4')
@@ -104,6 +107,7 @@ class GuideExperienceResource extends Resource
                     ->directory('experience_photos')
                     ->visibility('public')
                     ->deletable()
+                    ->maxSize(20480)
                     ->imagePreviewHeight('120'),
                 FileUpload::make('photo_image_3')
                     ->label('Photo 5')
@@ -112,6 +116,7 @@ class GuideExperienceResource extends Resource
                     ->directory('experience_photos')
                     ->visibility('public')
                     ->deletable()
+                    ->maxSize(20480)
                     ->imagePreviewHeight('120'),
                 FileUpload::make('photo_image_4')
                     ->label('Photo 6')
@@ -120,6 +125,7 @@ class GuideExperienceResource extends Resource
                     ->directory('experience_photos')
                     ->visibility('public')
                     ->deletable()
+                    ->maxSize(20480)
                     ->imagePreviewHeight('120'),
             ])->columns(3),
 
