@@ -9,6 +9,7 @@ use App\Models\Question;
 use App\Models\QuestionChoice;
 use App\Models\User;
 use Filament\Forms\Components\FileUpload;
+use Filament\Forms\Components\Placeholder;
 use Filament\Forms\Components\Section as FormSection;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
@@ -16,6 +17,7 @@ use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
 use Filament\Forms\Form;
 use Filament\Forms\Get;
+use Illuminate\Support\Facades\Storage;
 use Filament\Resources\Resource;
 use Filament\Tables\Actions\Action;
 use Filament\Tables\Actions\ViewAction;
@@ -111,6 +113,23 @@ class GuideResource extends Resource
                     ->rows(4)
                     ->columnSpanFull()
                     ->nullable(),
+                Placeholder::make('audio_actuel')
+                    ->label('Bio audio actuelle')
+                    ->content(fn ($record) => $record && $record->about_me_audio
+                        ? new \Illuminate\Support\HtmlString(
+                            '<a href="' . (str_starts_with($record->about_me_audio, 'http')
+                                ? $record->about_me_audio
+                                : Storage::disk('s3')->url($record->about_me_audio))
+                            . '" target="_blank" class="text-primary-600 underline">Écouter l\'audio</a>'
+                        )
+                        : 'Aucun audio enregistré'
+                    )
+                    ->columnSpanFull(),
+                Toggle::make('delete_audio')
+                    ->label('Supprimer l\'audio')
+                    ->default(false)
+                    ->visible(fn ($record) => $record && !empty($record->about_me_audio))
+                    ->columnSpanFull(),
             ])->columns(2),
 
             // ── Questions / Réponses ──────────────────────────────────────────

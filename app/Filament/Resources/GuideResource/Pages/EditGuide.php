@@ -62,12 +62,16 @@ class EditGuide extends EditRecord
     {
         // Gestion de la photo de profil
         if (empty($data['profile_path'])) {
-            // Aucune nouvelle photo → on garde l'existante
             $data['profile_path'] = $this->record->profile_path;
         } elseif (!str_starts_with($data['profile_path'], 'http')) {
-            // Filament renvoie le chemin relatif S3 → on construit la full URL
             $data['profile_path'] = Storage::disk('s3')->url($data['profile_path']);
         }
+
+        // Suppression de l'audio
+        if (!empty($data['delete_audio'])) {
+            $data['about_me_audio'] = null;
+        }
+        unset($data['delete_audio']);
 
         // Traduire about_me (FR → EN) si le texte a changé
         $newAboutMe = trim($data['about_me'] ?? '');
