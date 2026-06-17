@@ -28,11 +28,21 @@ class EditGuideExperience extends EditRecord
     {
         // ── Photos ───────────────────────────────────────────────────────────
         $data['photo_principal'] = $this->urlToS3Path($this->record->photoprincipal?->photo_url);
-        $data['photo_image_0']   = $this->urlToS3Path($this->record->image_1?->photo_url);
-        $data['photo_image_1']   = $this->urlToS3Path($this->record->image_2?->photo_url);
-        $data['photo_image_2']   = $this->urlToS3Path($this->record->image_3?->photo_url);
-        $data['photo_image_3']   = $this->urlToS3Path($this->record->image_4?->photo_url);
-        $data['photo_image_4']   = $this->urlToS3Path($this->record->image_5?->photo_url);
+
+        // Charge les photos secondaires par ordre d'ID, indépendamment du type_image
+        // (l'API mobile peut stocker des valeurs variées comme 'petit_format', 'image_0', etc.)
+        $secondaryPhotos = GuidExperiencePhotos::where('guide_experience_id', $this->record->id)
+            ->where('type_image', '!=', 'principal')
+            ->orderBy('id')
+            ->take(5)
+            ->pluck('photo_url')
+            ->toArray();
+
+        $data['photo_image_0'] = $this->urlToS3Path($secondaryPhotos[0] ?? null);
+        $data['photo_image_1'] = $this->urlToS3Path($secondaryPhotos[1] ?? null);
+        $data['photo_image_2'] = $this->urlToS3Path($secondaryPhotos[2] ?? null);
+        $data['photo_image_3'] = $this->urlToS3Path($secondaryPhotos[3] ?? null);
+        $data['photo_image_4'] = $this->urlToS3Path($secondaryPhotos[4] ?? null);
 
         // ── Questions / Réponses ─────────────────────────────────────────────
         $questions = Question::where('contexts', 'like', '%experience%')->get();
@@ -66,38 +76,47 @@ class EditGuideExperience extends EditRecord
     protected function mutateFormDataBeforeSave(array $data): array
     {
         // ── 1. Photos ────────────────────────────────────────────────────────
-        $photoMap = [
-            'photo_principal' => 'principal',
-            'photo_image_0'   => 'image_0',
-            'photo_image_1'   => 'image_1',
-            'photo_image_2'   => 'image_2',
-            'photo_image_3'   => 'image_3',
-            'photo_image_4'   => 'image_4',
-        ];
+        $principalValue = $data['photo_principal'] ?? null;
+        unset($data['photo_principal']);
 
-        foreach ($photoMap as $formField => $typeImage) {
-            $value = $data[$formField] ?? null;
-            unset($data[$formField]); // ne pas passer au modèle guide_experiences
-
-            if (empty($value)) {
-                // Photo supprimée ou jamais uploadée → supprimer l'enregistrement (sauf principal)
-                if ($typeImage !== 'principal') {
-                    GuidExperiencePhotos::where('guide_experience_id', $this->record->id)
-                        ->where('type_image', $typeImage)
-                        ->delete();
-                }
-                continue;
-            }
-
-            // Chemin relatif → URL complète S3
-            $fullUrl = str_starts_with($value, 'http')
-                ? $value
-                : Storage::disk('s3')->url($value);
+        // Photo principale
+        if (!empty($principalValue)) {
+            $fullUrl = str_starts_with($principalValue, 'http')
+                ? $principalValue
+                : Storage::disk('s3')->url($principalValue);
 
             GuidExperiencePhotos::updateOrCreate(
-                ['guide_experience_id' => $this->record->id, 'type_image' => $typeImage],
+                ['guide_experience_id' => $this->record->id, 'type_image' => 'principal'],
                 ['photo_url' => $fullUrl]
             );
+        }
+
+        // Photos secondaires : supprimer toutes puis recréer avec type_image normalisé
+        // (évite les photos orphelines dues à des type_image variés depuis l'API mobile)
+        $secondaryFields = ['photo_image_0', 'photo_image_1', 'photo_image_2', 'photo_image_3', 'photo_image_4'];
+        $secondaryTypes  = ['image_0', 'image_1', 'image_2', 'image_3', 'image_4'];
+
+        $newSecondaryUrls = [];
+        foreach ($secondaryFields as $field) {
+            $value = $data[$field] ?? null;
+            unset($data[$field]);
+            if (!empty($value)) {
+                $newSecondaryUrls[] = str_starts_with($value, 'http')
+                    ? $value
+                    : Storage::disk('s3')->url($value);
+            }
+        }
+
+        GuidExperiencePhotos::where('guide_experience_id', $this->record->id)
+            ->where('type_image', '!=', 'principal')
+            ->delete();
+
+        foreach ($newSecondaryUrls as $i => $url) {
+            GuidExperiencePhotos::create([
+                'guide_experience_id' => $this->record->id,
+                'type_image'          => $secondaryTypes[$i],
+                'photo_url'           => $url,
+            ]);
         }
 
         // ── 2. Questions → responses (delete + recreate) ─────────────────────
