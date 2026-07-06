@@ -159,7 +159,12 @@ class PromotionResource extends Resource
 
     private static function flushMatchingCache(): void
     {
-        $store       = Cache::getStore();
+        $store = Cache::getStore();
+
+        if (!($store instanceof \Illuminate\Cache\RedisStore)) {
+            return;
+        }
+
         $redis       = $store->connection();
         $cachePrefix = $store->getPrefix();
 
