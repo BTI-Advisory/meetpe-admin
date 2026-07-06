@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Admin\AdminGuideController;
+use App\Http\Controllers\Admin\PromotionController;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\StripeConnectController;
 use Illuminate\Support\Facades\Route;
@@ -47,6 +48,12 @@ Route::middleware(['auth', 'admin'])->group(function () {
     Route::get("guide-experience-horsligne/{index?}", [AdminGuideController::class, "getHorsLigneGuidExperiences"])->name("getHorsLigneGuidExperiences");
     Route::get("guide-experience-deleted/{index?}", [AdminGuideController::class, "getDeletedExperiences"])->name("getDeletedExperiences");
     Route::get("guide-experience-another-document/{index?}", [AdminGuideController::class, "another_document"])->name("another_document");
+
+    // Promotions
+    Route::get('promotions', [PromotionController::class, 'index'])->name('promotions.index');
+    Route::post('promotions', [PromotionController::class, 'store'])->name('promotions.store');
+    Route::put('promotions/{promotion}/toggle', [PromotionController::class, 'toggle'])->name('promotions.toggle');
+    Route::delete('promotions/{promotion}', [PromotionController::class, 'destroy'])->name('promotions.destroy');
 
     // Voyageurs & réservations
     Route::get('reservations/{index?}', [AdminGuideController::class, "getAllReservations"])->name("getAllreservations");

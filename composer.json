@@ -16,6 +16,7 @@
         "laravel/tinker": "^2.8",
         "league/flysystem-aws-s3-v3": "^3.0",
         "maatwebsite/excel": "^3.1",
+        "predis/predis": "^3.5",
         "stripe/stripe-php": "^20.0",
         "symfony/http-client": "^7.4",
         "symfony/mailgun-mailer": "^7.1"
