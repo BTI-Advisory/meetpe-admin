@@ -72,6 +72,14 @@ class VoyageurResource extends Resource
                         ->badge()
                         ->color(fn ($state) => $state === 'Actif' ? 'success' : 'danger'),
                     TextEntry::make('user.created_at')->label('Inscrit le')->date('d/m/Y'),
+                    TextEntry::make('user.device_language')
+                        ->label('Langue de l\'app')
+                        ->badge()
+                        ->formatStateUsing(fn ($state) => match(strtolower($state ?? 'fr')) {
+                            'en'    => '🇬🇧 Anglais',
+                            default => '🇫🇷 Français',
+                        })
+                        ->color(fn ($state) => strtolower($state ?? 'fr') === 'en' ? 'info' : 'primary'),
                 ]),
             ]),
             Section::make('Réponses au questionnaire')
