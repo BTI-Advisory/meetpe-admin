@@ -11,121 +11,156 @@ use App\Models\Voyageur;
 use Filament\Widgets\StatsOverviewWidget as BaseWidget;
 use Filament\Widgets\StatsOverviewWidget\Stat;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 
 class StatsOverviewWidget extends BaseWidget
 {
     protected function getStats(): array
     {
-        $now   = Carbon::now();
-        $start = $now->copy()->startOfMonth();
-        $end   = $now->copy()->endOfMonth();
+        return Cache::remember('dashboard_stats', 300, function () {
+            $now        = Carbon::now();
+            $start      = $now->copy()->startOfMonth();
+            $end        = $now->copy()->endOfMonth();
+            $since6     = $now->copy()->subMonths(5)->startOfMonth();
+            $statusPaye = [ReservationStatus::ACCEPTÉE->value, ReservationStatus::ARCHIVÉE->value];
+            $statusExcl = [ReservationStatus::CREATED->value, ReservationStatus::ABANDONED->value];
 
-        // Statuts considérés comme "réalisés" (acceptée = en cours, archivée = réalisée)
-        $statusPaye = [ReservationStatus::ACCEPTÉE->value, ReservationStatus::ARCHIVÉE->value];
+            // ── 1 requête : CA + réservations groupés par mois (6 mois) ─────────
+            $resByMonth = DB::table('reservations')
+                ->selectRaw('YEAR(created_at) as yr, MONTH(created_at) as mo, status, is_payed, COUNT(*) as cnt, SUM(total_price) as total')
+                ->where('created_at', '>=', $since6)
+                ->groupByRaw('YEAR(created_at), MONTH(created_at), status, is_payed')
+                ->get();
 
-        // CA total (réservations réalisées payées)
-        $caTotal = Reservation::whereIn('status', $statusPaye)
-            ->where('is_payed', true)
-            ->sum('total_price');
+            // ── 1 requête : totaux globaux ────────────────────────────────────
+            $globalTotals = DB::table('reservations')
+                ->selectRaw('status, is_payed, COUNT(*) as cnt, SUM(total_price) as total')
+                ->groupByRaw('status, is_payed')
+                ->get()
+                ->groupBy('status');
 
-        // CA du mois en cours
-        $caMois = Reservation::whereIn('status', $statusPaye)
-            ->where('is_payed', true)
-            ->whereBetween('created_at', [$start, $end])
-            ->sum('total_price');
+            // Calcul CA total et par mois
+            $caTotal   = 0;
+            $caByMonth = [];
+            $resByMonthGrouped = $resByMonth->groupBy(fn($r) => $r->yr . '-' . str_pad($r->mo, 2, '0', STR_PAD_LEFT));
 
-        // Évolution CA 6 derniers mois (pour sparkline)
-        $caParMois = collect(range(5, 0))->map(function ($i) use ($statusPaye) {
-            $s = Carbon::now()->subMonths($i)->startOfMonth();
-            $e = Carbon::now()->subMonths($i)->endOfMonth();
-            return Reservation::whereIn('status', $statusPaye)
-                ->where('is_payed', true)
-                ->whereBetween('created_at', [$s, $e])
-                ->sum('total_price');
-        })->toArray();
+            foreach ($globalTotals as $status => $rows) {
+                if (in_array($status, $statusPaye)) {
+                    foreach ($rows as $row) {
+                        if ($row->is_payed) $caTotal += $row->total;
+                    }
+                }
+            }
 
-        // Réservations du mois
-        $resMois = Reservation::whereNotIn('status', [ReservationStatus::CREATED->value, ReservationStatus::ABANDONED->value])
-            ->whereBetween('created_at', [$start, $end])
-            ->count();
+            $caParMois  = [];
+            $resParMois = [];
+            $caMois     = 0;
+            $resMois    = 0;
 
-        // Évolution réservations 6 mois
-        $resParMois = collect(range(5, 0))->map(function ($i) {
-            $s = Carbon::now()->subMonths($i)->startOfMonth();
-            $e = Carbon::now()->subMonths($i)->endOfMonth();
-            return Reservation::whereNotIn('status', [ReservationStatus::CREATED->value, ReservationStatus::ABANDONED->value])
-                ->whereBetween('created_at', [$s, $e])
+            for ($i = 5; $i >= 0; $i--) {
+                $m   = $now->copy()->subMonths($i);
+                $key = $m->year . '-' . str_pad($m->month, 2, '0', STR_PAD_LEFT);
+                $monthRows = $resByMonthGrouped->get($key, collect());
+
+                $caM  = 0;
+                $resM = 0;
+                foreach ($monthRows as $row) {
+                    if (in_array($row->status, $statusPaye) && $row->is_payed) $caM += $row->total;
+                    if (!in_array($row->status, $statusExcl)) $resM += $row->cnt;
+                }
+                $caParMois[]  = round($caM, 2);
+                $resParMois[] = $resM;
+
+                if ($i === 0) {
+                    $caMois  = $caM;
+                    $resMois = $resM;
+                }
+            }
+
+            // Taux de conversion depuis les totaux globaux
+            $totalRes  = 0;
+            $acceptées = 0;
+            foreach ($globalTotals as $status => $rows) {
+                if (!in_array($status, $statusExcl)) {
+                    $totalRes += $rows->sum('cnt');
+                }
+                if (in_array($status, $statusPaye)) {
+                    $acceptées += $rows->sum('cnt');
+                }
+            }
+            $tauxConversion = $totalRes > 0 ? round(($acceptées / $totalRes) * 100, 1) : 0;
+
+            // ── 1 requête : nouveaux guides ce mois ──────────────────────────
+            $nouveauxGuides = User::join('guides', 'users.id', '=', 'guides.user_id')
+                ->whereBetween('users.created_at', [$start, $end])
                 ->count();
-        })->toArray();
 
-        // Taux de conversion (acceptées+archivées / total hors created+abandoned)
-        $totalRes  = Reservation::whereNotIn('status', [ReservationStatus::CREATED->value, ReservationStatus::ABANDONED->value])->count();
-        $acceptées = Reservation::whereIn('status', [ReservationStatus::ACCEPTÉE->value, ReservationStatus::ARCHIVÉE->value])->count();
-        $tauxConversion = $totalRes > 0 ? round(($acceptées / $totalRes) * 100, 1) : 0;
+            // ── 1 requête : nouveaux voyageurs ce mois ────────────────────────
+            $nouveauxVoyageurs = Voyageur::whereBetween('created_at', [$start, $end])->count();
 
-        // Nouveaux guides ce mois
-        $nouveauxGuides = User::whereHas('Guide')
-            ->whereBetween('created_at', [$start, $end])
-            ->count();
+            // ── Compteurs simples (cachés ici, 3 requêtes) ───────────────────
+            $totalGuides    = User::join('guides', 'users.id', '=', 'guides.user_id')->count();
+            $totalVoyageurs = Voyageur::count();
+            $expEnLigne     = GuideExperience::where('status', GuideExperienceStatusEnum::ONLINE->value)->count();
+            $expVerif       = GuideExperience::where('status', GuideExperienceStatusEnum::VERFICATION->value)->count();
 
-        // Nouveaux voyageurs ce mois
-        $nouveauxVoyageurs = Voyageur::whereBetween('created_at', [$start, $end])->count();
+            return [
+                Stat::make('CA Total', number_format($caTotal, 2, ',', ' ') . ' €')
+                    ->description('Toutes périodes confondues')
+                    ->descriptionIcon('heroicon-m-banknotes')
+                    ->icon('heroicon-o-banknotes')
+                    ->color('success')
+                    ->chart($caParMois),
 
-        return [
-            Stat::make('CA Total', number_format($caTotal, 2, ',', ' ') . ' €')
-                ->description('Toutes périodes confondues')
-                ->descriptionIcon('heroicon-m-banknotes')
-                ->icon('heroicon-o-banknotes')
-                ->color('success')
-                ->chart($caParMois),
+                Stat::make('CA du mois', number_format($caMois, 2, ',', ' ') . ' €')
+                    ->description($now->translatedFormat('F Y'))
+                    ->descriptionIcon('heroicon-m-calendar')
+                    ->icon('heroicon-o-chart-bar')
+                    ->color('success')
+                    ->chart($caParMois),
 
-            Stat::make('CA du mois', number_format($caMois, 2, ',', ' ') . ' €')
-                ->description(Carbon::now()->translatedFormat('F Y'))
-                ->descriptionIcon('heroicon-m-calendar')
-                ->icon('heroicon-o-chart-bar')
-                ->color('success')
-                ->chart($caParMois),
+                Stat::make('Taux de conversion', $tauxConversion . ' %')
+                    ->description('Réservations acceptées / total')
+                    ->descriptionIcon('heroicon-m-arrow-trending-up')
+                    ->icon('heroicon-o-arrow-trending-up')
+                    ->color('info'),
 
-            Stat::make('Taux de conversion', $tauxConversion . ' %')
-                ->description('Réservations acceptées / total')
-                ->descriptionIcon('heroicon-m-arrow-trending-up')
-                ->icon('heroicon-o-arrow-trending-up')
-                ->color('info'),
+                Stat::make('Réservations ce mois', $resMois)
+                    ->description('Hors créées / abandonnées')
+                    ->descriptionIcon('heroicon-m-ticket')
+                    ->icon('heroicon-o-ticket')
+                    ->color('primary')
+                    ->chart($resParMois),
 
-            Stat::make('Réservations ce mois', $resMois)
-                ->description('Hors créées / abandonnées')
-                ->descriptionIcon('heroicon-m-ticket')
-                ->icon('heroicon-o-ticket')
-                ->color('primary')
-                ->chart($resParMois),
+                Stat::make('Guides', $totalGuides)
+                    ->description('+' . $nouveauxGuides . ' ce mois')
+                    ->descriptionIcon('heroicon-m-user-plus')
+                    ->icon('heroicon-o-user-circle')
+                    ->color('primary'),
 
-            Stat::make('Guides', User::whereHas('Guide')->count())
-                ->description('+' . $nouveauxGuides . ' ce mois')
-                ->descriptionIcon('heroicon-m-user-plus')
-                ->icon('heroicon-o-user-circle')
-                ->color('primary'),
+                Stat::make('Voyageurs', $totalVoyageurs)
+                    ->description('+' . $nouveauxVoyageurs . ' ce mois')
+                    ->descriptionIcon('heroicon-m-user-plus')
+                    ->icon('heroicon-o-users')
+                    ->color('info'),
 
-            Stat::make('Voyageurs', Voyageur::count())
-                ->description('+' . $nouveauxVoyageurs . ' ce mois')
-                ->descriptionIcon('heroicon-m-user-plus')
-                ->icon('heroicon-o-users')
-                ->color('info'),
+                Stat::make('Expériences en ligne', $expEnLigne)
+                    ->icon('heroicon-o-globe-alt')
+                    ->color('success'),
 
-            Stat::make('Expériences en ligne', GuideExperience::where('status', GuideExperienceStatusEnum::ONLINE->value)->count())
-                ->icon('heroicon-o-globe-alt')
-                ->color('success'),
+                Stat::make('En vérification', $expVerif)
+                    ->icon('heroicon-o-clock')
+                    ->color('warning'),
 
-            Stat::make('En vérification', GuideExperience::where('status', GuideExperienceStatusEnum::VERFICATION->value)->count())
-                ->icon('heroicon-o-clock')
-                ->color('warning'),
+                Stat::make('Réservations réalisées', $acceptées)
+                    ->icon('heroicon-o-calendar-days')
+                    ->color('success'),
 
-            Stat::make('Réservations réalisées', $acceptées)
-                ->icon('heroicon-o-calendar-days')
-                ->color('success'),
-
-            Stat::make('Réservations totales', $totalRes)
-                ->icon('heroicon-o-ticket')
-                ->color('gray'),
-        ];
+                Stat::make('Réservations totales', $totalRes)
+                    ->icon('heroicon-o-ticket')
+                    ->color('gray'),
+            ];
+        });
     }
 }
