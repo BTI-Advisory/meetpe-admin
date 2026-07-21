@@ -6,6 +6,8 @@ use App\Enums\ReservationStatus;
 use App\Models\Reservation;
 use Filament\Widgets\ChartWidget;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 
 class ReservationsChartWidget extends ChartWidget
 {
@@ -26,6 +28,17 @@ class ReservationsChartWidget extends ChartWidget
     protected function getData(): array
     {
         $months = (int) ($this->filter ?? 6);
+        $since  = Carbon::now()->subMonths($months - 1)->startOfMonth();
+
+        // 1 seule requête GROUP BY au lieu de 3×N requêtes
+        $rows = Cache::remember('chart_reservations_' . $months, 300, function () use ($since) {
+            return DB::table('reservations')
+                ->selectRaw('YEAR(created_at) as yr, MONTH(created_at) as mo, status, COUNT(*) as cnt')
+                ->where('created_at', '>=', $since)
+                ->groupByRaw('YEAR(created_at), MONTH(created_at), status')
+                ->get()
+                ->groupBy(fn($r) => $r->yr . '-' . str_pad($r->mo, 2, '0', STR_PAD_LEFT));
+        });
 
         $labels   = [];
         $accepted = [];
@@ -33,16 +46,16 @@ class ReservationsChartWidget extends ChartWidget
         $pending  = [];
 
         for ($i = $months - 1; $i >= 0; $i--) {
-            $start = Carbon::now()->subMonths($i)->startOfMonth();
-            $end   = Carbon::now()->subMonths($i)->endOfMonth();
+            $m         = Carbon::now()->subMonths($i);
+            $key       = $m->year . '-' . str_pad($m->month, 2, '0', STR_PAD_LEFT);
+            $byStatus  = ($rows->get($key, collect()))->keyBy('status');
 
-            $labels[]   = $start->translatedFormat('M Y');
-            $accepted[] = Reservation::whereIn('status', [ReservationStatus::ACCEPTÉE->value, ReservationStatus::ARCHIVÉE->value])
-                ->whereBetween('created_at', [$start, $end])->count();
-            $canceled[] = Reservation::whereIn('status', [ReservationStatus::ANNULÉE->value, ReservationStatus::REFUSÉE->value])
-                ->whereBetween('created_at', [$start, $end])->count();
-            $pending[]  = Reservation::where('status', ReservationStatus::PENDING->value)
-                ->whereBetween('created_at', [$start, $end])->count();
+            $labels[]   = $m->translatedFormat('M Y');
+            $accepted[] = ($byStatus->get(ReservationStatus::ACCEPTÉE->value)?->cnt ?? 0)
+                        + ($byStatus->get(ReservationStatus::ARCHIVÉE->value)?->cnt ?? 0);
+            $canceled[] = ($byStatus->get(ReservationStatus::ANNULÉE->value)?->cnt ?? 0)
+                        + ($byStatus->get(ReservationStatus::REFUSÉE->value)?->cnt ?? 0);
+            $pending[]  = $byStatus->get(ReservationStatus::PENDING->value)?->cnt ?? 0;
         }
 
         return [

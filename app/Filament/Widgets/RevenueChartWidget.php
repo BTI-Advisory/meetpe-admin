@@ -6,6 +6,8 @@ use App\Enums\ReservationStatus;
 use App\Models\Reservation;
 use Filament\Widgets\ChartWidget;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 
 class RevenueChartWidget extends ChartWidget
 {
@@ -26,21 +28,28 @@ class RevenueChartWidget extends ChartWidget
     protected function getData(): array
     {
         $months = (int) ($this->filter ?? 6);
+        $since  = Carbon::now()->subMonths($months - 1)->startOfMonth();
+
+        // 1 seule requête GROUP BY au lieu de N requêtes
+        $rows = Cache::remember('chart_revenue_' . $months, 300, function () use ($since) {
+            return DB::table('reservations')
+                ->selectRaw('YEAR(created_at) as yr, MONTH(created_at) as mo, SUM(total_price) as total')
+                ->whereIn('status', [ReservationStatus::ACCEPTÉE->value, ReservationStatus::ARCHIVÉE->value])
+                ->where('is_payed', true)
+                ->where('created_at', '>=', $since)
+                ->groupByRaw('YEAR(created_at), MONTH(created_at)')
+                ->get()
+                ->keyBy(fn($r) => $r->yr . '-' . str_pad($r->mo, 2, '0', STR_PAD_LEFT));
+        });
 
         $labels = [];
         $ca     = [];
 
         for ($i = $months - 1; $i >= 0; $i--) {
-            $start    = Carbon::now()->subMonths($i)->startOfMonth();
-            $end      = Carbon::now()->subMonths($i)->endOfMonth();
-            $labels[] = $start->translatedFormat('M Y');
-            $ca[]     = round(
-                Reservation::whereIn('status', [ReservationStatus::ACCEPTÉE->value, ReservationStatus::ARCHIVÉE->value])
-                    ->where('is_payed', true)
-                    ->whereBetween('created_at', [$start, $end])
-                    ->sum('total_price'),
-                2
-            );
+            $m        = Carbon::now()->subMonths($i);
+            $key      = $m->year . '-' . str_pad($m->month, 2, '0', STR_PAD_LEFT);
+            $labels[] = $m->translatedFormat('M Y');
+            $ca[]     = round($rows->get($key)?->total ?? 0, 2);
         }
 
         return [
