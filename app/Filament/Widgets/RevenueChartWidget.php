@@ -35,10 +35,10 @@ class RevenueChartWidget extends ChartWidget
             $end      = Carbon::now()->subMonths($i)->endOfMonth();
             $labels[] = $start->translatedFormat('M Y');
             $ca[]     = round(
-                Reservation::where('status', ReservationStatus::ACCEPTÉE->value)
+                Reservation::whereIn('status', [ReservationStatus::ACCEPTÉE->value, ReservationStatus::ARCHIVÉE->value])
                     ->where('is_payed', true)
-                    ->whereBetween('date_time', [$start, $end])
-                    ->sum('total_price') / 100,
+                    ->whereBetween('created_at', [$start, $end])
+                    ->sum('total_price'),
                 2
             );
         }
