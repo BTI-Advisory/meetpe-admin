@@ -20,30 +20,33 @@ class StatsOverviewWidget extends BaseWidget
         $start = $now->copy()->startOfMonth();
         $end   = $now->copy()->endOfMonth();
 
-        // CA total (réservations acceptées payées)
-        $caTotal = Reservation::where('status', ReservationStatus::ACCEPTÉE->value)
+        // Statuts considérés comme "réalisés" (acceptée = en cours, archivée = réalisée)
+        $statusPaye = [ReservationStatus::ACCEPTÉE->value, ReservationStatus::ARCHIVÉE->value];
+
+        // CA total (réservations réalisées payées)
+        $caTotal = Reservation::whereIn('status', $statusPaye)
             ->where('is_payed', true)
             ->sum('total_price');
 
         // CA du mois en cours
-        $caMois = Reservation::where('status', ReservationStatus::ACCEPTÉE->value)
+        $caMois = Reservation::whereIn('status', $statusPaye)
             ->where('is_payed', true)
-            ->whereBetween('date_time', [$start, $end])
+            ->whereBetween('created_at', [$start, $end])
             ->sum('total_price');
 
         // Évolution CA 6 derniers mois (pour sparkline)
-        $caParMois = collect(range(5, 0))->map(function ($i) {
+        $caParMois = collect(range(5, 0))->map(function ($i) use ($statusPaye) {
             $s = Carbon::now()->subMonths($i)->startOfMonth();
             $e = Carbon::now()->subMonths($i)->endOfMonth();
-            return Reservation::where('status', ReservationStatus::ACCEPTÉE->value)
+            return Reservation::whereIn('status', $statusPaye)
                 ->where('is_payed', true)
-                ->whereBetween('date_time', [$s, $e])
+                ->whereBetween('created_at', [$s, $e])
                 ->sum('total_price');
         })->toArray();
 
         // Réservations du mois
         $resMois = Reservation::whereNotIn('status', [ReservationStatus::CREATED->value, ReservationStatus::ABANDONED->value])
-            ->whereBetween('date_time', [$start, $end])
+            ->whereBetween('created_at', [$start, $end])
             ->count();
 
         // Évolution réservations 6 mois
@@ -51,13 +54,13 @@ class StatsOverviewWidget extends BaseWidget
             $s = Carbon::now()->subMonths($i)->startOfMonth();
             $e = Carbon::now()->subMonths($i)->endOfMonth();
             return Reservation::whereNotIn('status', [ReservationStatus::CREATED->value, ReservationStatus::ABANDONED->value])
-                ->whereBetween('date_time', [$s, $e])
+                ->whereBetween('created_at', [$s, $e])
                 ->count();
         })->toArray();
 
-        // Taux de conversion (acceptées / total hors created+abandoned)
+        // Taux de conversion (acceptées+archivées / total hors created+abandoned)
         $totalRes  = Reservation::whereNotIn('status', [ReservationStatus::CREATED->value, ReservationStatus::ABANDONED->value])->count();
-        $acceptées = Reservation::where('status', ReservationStatus::ACCEPTÉE->value)->count();
+        $acceptées = Reservation::whereIn('status', [ReservationStatus::ACCEPTÉE->value, ReservationStatus::ARCHIVÉE->value])->count();
         $tauxConversion = $totalRes > 0 ? round(($acceptées / $totalRes) * 100, 1) : 0;
 
         // Nouveaux guides ce mois
@@ -69,14 +72,14 @@ class StatsOverviewWidget extends BaseWidget
         $nouveauxVoyageurs = Voyageur::whereBetween('created_at', [$start, $end])->count();
 
         return [
-            Stat::make('CA Total', number_format($caTotal / 100, 2, ',', ' ') . ' €')
+            Stat::make('CA Total', number_format($caTotal, 2, ',', ' ') . ' €')
                 ->description('Toutes périodes confondues')
                 ->descriptionIcon('heroicon-m-banknotes')
                 ->icon('heroicon-o-banknotes')
                 ->color('success')
                 ->chart($caParMois),
 
-            Stat::make('CA du mois', number_format($caMois / 100, 2, ',', ' ') . ' €')
+            Stat::make('CA du mois', number_format($caMois, 2, ',', ' ') . ' €')
                 ->description(Carbon::now()->translatedFormat('F Y'))
                 ->descriptionIcon('heroicon-m-calendar')
                 ->icon('heroicon-o-chart-bar')
@@ -116,7 +119,7 @@ class StatsOverviewWidget extends BaseWidget
                 ->icon('heroicon-o-clock')
                 ->color('warning'),
 
-            Stat::make('Réservations acceptées', $acceptées)
+            Stat::make('Réservations réalisées', $acceptées)
                 ->icon('heroicon-o-calendar-days')
                 ->color('success'),
 

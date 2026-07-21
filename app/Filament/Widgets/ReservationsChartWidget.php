@@ -37,12 +37,12 @@ class ReservationsChartWidget extends ChartWidget
             $end   = Carbon::now()->subMonths($i)->endOfMonth();
 
             $labels[]   = $start->translatedFormat('M Y');
-            $accepted[] = Reservation::where('status', ReservationStatus::ACCEPTÉE->value)
-                ->whereBetween('date_time', [$start, $end])->count();
+            $accepted[] = Reservation::whereIn('status', [ReservationStatus::ACCEPTÉE->value, ReservationStatus::ARCHIVÉE->value])
+                ->whereBetween('created_at', [$start, $end])->count();
             $canceled[] = Reservation::whereIn('status', [ReservationStatus::ANNULÉE->value, ReservationStatus::REFUSÉE->value])
-                ->whereBetween('date_time', [$start, $end])->count();
+                ->whereBetween('created_at', [$start, $end])->count();
             $pending[]  = Reservation::where('status', ReservationStatus::PENDING->value)
-                ->whereBetween('date_time', [$start, $end])->count();
+                ->whereBetween('created_at', [$start, $end])->count();
         }
 
         return [
