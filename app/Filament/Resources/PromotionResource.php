@@ -6,17 +6,12 @@ use App\Filament\Resources\PromotionResource\Pages;
 use App\Models\Promotion;
 use Filament\Forms\Components\DateTimePicker;
 use Filament\Forms\Components\TextInput;
-use Filament\Forms\Components\Toggle;
 use Filament\Forms\Form;
-use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
 use Illuminate\Support\Facades\Cache;
-use Filament\Tables\Actions\Action;
 use Filament\Tables\Actions\CreateAction;
 use Filament\Tables\Actions\DeleteAction;
 use Filament\Tables\Actions\EditAction;
-use Filament\Tables\Columns\BadgeColumn;
-use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 
@@ -49,20 +44,17 @@ class PromotionResource extends Resource
                 ->placeholder('Ex : 15'),
 
             DateTimePicker::make('starts_at')
-                ->label('Date de début')
-                ->nullable()
+                ->label('Date de début (heure France)')
+                ->required()
+                ->timezone('Europe/Paris')
                 ->displayFormat('d/m/Y H:i'),
 
             DateTimePicker::make('ends_at')
-                ->label('Date de fin')
-                ->nullable()
+                ->label('Date de fin (heure France)')
+                ->required()
+                ->timezone('Europe/Paris')
                 ->displayFormat('d/m/Y H:i')
                 ->after('starts_at'),
-
-            Toggle::make('is_active')
-                ->label('Activer immédiatement')
-                ->helperText('Désactive automatiquement toute autre promotion active.')
-                ->default(false),
         ]);
     }
 
@@ -84,29 +76,21 @@ class PromotionResource extends Resource
 
                 TextColumn::make('starts_at')
                     ->label('Début')
-                    ->dateTime('d/m/Y')
+                    ->dateTime('d/m/Y H:i', 'Europe/Paris')
                     ->placeholder('—'),
 
                 TextColumn::make('ends_at')
                     ->label('Fin')
-                    ->dateTime('d/m/Y')
+                    ->dateTime('d/m/Y H:i', 'Europe/Paris')
                     ->placeholder('—'),
-
-                IconColumn::make('is_active')
-                    ->label('Active')
-                    ->boolean()
-                    ->trueIcon('heroicon-o-check-circle')
-                    ->falseIcon('heroicon-o-x-circle')
-                    ->trueColor('success')
-                    ->falseColor('gray'),
 
                 TextColumn::make('status')
                     ->label('Statut')
                     ->badge()
                     ->getStateUsing(function (Promotion $record): string {
-                        if ($record->is_active) return 'Actif';
-                        if ($record->ends_at && $record->ends_at->isPast()) return 'Expiré';
+                        if ($record->ends_at && $record->ends_at->isPast())    return 'Expiré';
                         if ($record->starts_at && $record->starts_at->isFuture()) return 'Planifié';
+                        if ($record->starts_at && $record->starts_at->isPast())   return 'Actif';
                         return 'Inactif';
                     })
                     ->color(fn (string $state): string => match ($state) {
@@ -117,24 +101,6 @@ class PromotionResource extends Resource
                     }),
             ])
             ->actions([
-                Action::make('toggle')
-                    ->label(fn (Promotion $record) => $record->is_active ? 'Désactiver' : 'Activer')
-                    ->icon(fn (Promotion $record) => $record->is_active ? 'heroicon-o-x-circle' : 'heroicon-o-check-circle')
-                    ->color(fn (Promotion $record) => $record->is_active ? 'warning' : 'success')
-                    ->action(function (Promotion $record) {
-                        if (!$record->is_active) {
-                            Promotion::where('id', '!=', $record->id)->update(['is_active' => false]);
-                        }
-                        $record->update(['is_active' => !$record->is_active]);
-                        self::clearCache();
-
-                        $label = $record->is_active ? 'activée' : 'désactivée';
-                        Notification::make()
-                            ->title("Promotion « {$record->label} » $label.")
-                            ->success()
-                            ->send();
-                    }),
-
                 EditAction::make()
                     ->after(fn () => self::clearCache()),
 
