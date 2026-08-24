@@ -91,32 +91,39 @@ class EditGuideExperience extends EditRecord
             );
         }
 
-        // Photos secondaires : supprimer toutes puis recréer avec type_image normalisé
-        // (évite les photos orphelines dues à des type_image variés depuis l'API mobile)
+        // Photos secondaires : mettre à jour l'URL en préservant le type_image d'origine
         $secondaryFields = ['photo_image_0', 'photo_image_1', 'photo_image_2', 'photo_image_3', 'photo_image_4'];
-        $secondaryTypes  = ['image_0', 'image_1', 'image_2', 'image_3', 'image_4'];
 
-        $newSecondaryUrls = [];
-        foreach ($secondaryFields as $field) {
+        $existingSecondary = GuidExperiencePhotos::where('guide_experience_id', $this->record->id)
+            ->where('type_image', '!=', 'principal')
+            ->orderBy('id')
+            ->take(5)
+            ->get();
+
+        foreach ($secondaryFields as $i => $field) {
             $value = $data[$field] ?? null;
             unset($data[$field]);
+
+            $existingPhoto = $existingSecondary->get($i);
+
             if (!empty($value)) {
-                $newSecondaryUrls[] = str_starts_with($value, 'http')
+                $fullUrl = str_starts_with($value, 'http')
                     ? $value
                     : Storage::disk('s3')->url($value);
+
+                if ($existingPhoto) {
+                    // Mise à jour URL uniquement — type_image inchangé
+                    $existingPhoto->update(['photo_url' => $fullUrl]);
+                } else {
+                    GuidExperiencePhotos::create([
+                        'guide_experience_id' => $this->record->id,
+                        'type_image'          => 'image_' . $i,
+                        'photo_url'           => $fullUrl,
+                    ]);
+                }
+            } elseif ($existingPhoto) {
+                $existingPhoto->delete();
             }
-        }
-
-        GuidExperiencePhotos::where('guide_experience_id', $this->record->id)
-            ->where('type_image', '!=', 'principal')
-            ->delete();
-
-        foreach ($newSecondaryUrls as $i => $url) {
-            GuidExperiencePhotos::create([
-                'guide_experience_id' => $this->record->id,
-                'type_image'          => $secondaryTypes[$i],
-                'photo_url'           => $url,
-            ]);
         }
 
         // ── 2. Questions → responses (delete + recreate) ─────────────────────
