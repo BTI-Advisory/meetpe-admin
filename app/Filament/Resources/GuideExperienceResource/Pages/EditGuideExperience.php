@@ -92,7 +92,8 @@ class EditGuideExperience extends EditRecord
         }
 
         // Photos secondaires : mettre à jour l'URL en préservant le type_image d'origine
-        $secondaryFields = ['photo_image_0', 'photo_image_1', 'photo_image_2', 'photo_image_3', 'photo_image_4'];
+        $secondaryFields     = ['photo_image_0', 'photo_image_1', 'photo_image_2', 'photo_image_3', 'photo_image_4'];
+        $defaultSecondaryTypes = ['petit_format', 'petit_format', 'carre', 'paysage', 'carre'];
 
         $existingSecondary = GuidExperiencePhotos::where('guide_experience_id', $this->record->id)
             ->where('type_image', '!=', 'principal')
@@ -117,7 +118,7 @@ class EditGuideExperience extends EditRecord
                 } else {
                     GuidExperiencePhotos::create([
                         'guide_experience_id' => $this->record->id,
-                        'type_image'          => 'image_' . $i,
+                        'type_image'          => $defaultSecondaryTypes[$i],
                         'photo_url'           => $fullUrl,
                     ]);
                 }
