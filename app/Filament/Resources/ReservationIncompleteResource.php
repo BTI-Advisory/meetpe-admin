@@ -42,9 +42,11 @@ class ReservationIncompleteResource extends Resource
                     ->label('')
                     ->circular()
                     ->defaultImageUrl(asset('img/logo-ct-dark.png'))
-                    ->getStateUsing(fn ($record) => $record->voyageur?->profile_path
-                        ? Storage::disk('s3')->url($record->voyageur->profile_path)
-                        : null)
+                    ->getStateUsing(function ($record) {
+                        $path = $record->voyageur?->profile_path;
+                        if (!$path) return null;
+                        return str_starts_with($path, 'http') ? $path : Storage::disk('s3')->url($path);
+                    })
                     ->width(44)
                     ->height(44),
 
