@@ -31,7 +31,6 @@ class ViewVoyageur extends ViewRecord
 
                     $hasActiveReservations = \App\Models\Reservation::where('voyageur_id', $userId)
                         ->whereIn('status', [
-                            ReservationStatus::CREATED->value,
                             ReservationStatus::ACCEPTÉE->value,
                             ReservationStatus::PENDING->value,
                         ])->exists();
