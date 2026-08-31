@@ -142,50 +142,91 @@ class ViewGuide extends ViewRecord
                         }
                     };
 
-                    // ── 1. Expériences ────────────────────────────────────────
-                    GuideExperience::where('user_id', $user->id)->get()->each(function ($exp) use ($deleteS3) {
-                        GuidExperiencePhotos::where('guide_experience_id', $exp->id)->get()
-                            ->each(fn ($p) => $deleteS3($p->photo_url));
-                        GuidExperiencePhotos::where('guide_experience_id', $exp->id)->delete();
+                    DB::beginTransaction();
+                    try {
+                        // ── 1. Expériences du guide ───────────────────────────
+                        GuideExperience::where('user_id', $user->id)->get()->each(function ($exp) use ($deleteS3) {
+                            GuidExperiencePhotos::where('guide_experience_id', $exp->id)->get()
+                                ->each(fn ($p) => $deleteS3($p->photo_url));
+                            GuidExperiencePhotos::where('guide_experience_id', $exp->id)->delete();
 
-                        Responses::where('entity', 'experience')->where('entity_id', $exp->id)->delete();
-                        $exp->conditions()->delete();
-                        $exp->paidOptions()->delete();
-                        $exp->infos()->delete();
-                        $exp->avis()->delete();
-                        $exp->likedExperiences()->delete();
-                        DB::table('reservations')->where('experience_id', $exp->id)->delete();
+                            Responses::where('entity', 'experience')->where('entity_id', $exp->id)->delete();
+                            $exp->conditions()->delete();
+                            $exp->paidOptions()->delete();
+                            $exp->infos()->delete();
+                            $exp->avis()->delete();
+                            $exp->likedExperiences()->delete();
+                            DB::table('reservations')->where('experience_id', $exp->id)->delete();
 
-                        $planningIds = $exp->plannings()->pluck('id');
-                        if ($planningIds->isNotEmpty()) {
-                            DB::table('experience_schedules')->whereIn('planning_id', $planningIds)->delete();
+                            $planningIds = $exp->plannings()->pluck('id');
+                            if ($planningIds->isNotEmpty()) {
+                                DB::table('experience_schedules')->whereIn('planning_id', $planningIds)->delete();
+                            }
+                            $exp->plannings()->delete();
+                            $exp->delete();
+                        });
+
+                        // ── 2. Profil guide ───────────────────────────────────
+                        if ($guide) {
+                            Responses::where('entity', 'guide')->where('entity_id', $guide->guide_id)->delete();
+                            DB::table('guide_absence_times')->where('user_id', $user->id)->delete();
+                            $guide->payouts()->delete();
+                            $guide->failedPayouts()->delete();
+                            $guide->delete();
                         }
-                        $exp->plannings()->delete();
-                        $exp->delete();
-                    });
 
-                    // ── 2. Guide ──────────────────────────────────────────────
-                    if ($guide) {
-                        Responses::where('entity', 'guide')->where('entity_id', $guide->guide_id)->delete();
-                        $guide->payouts()->delete();
-                        $guide->failedPayouts()->delete();
-                        $guide->delete();
+                        // ── 3. Profil voyageur (si guide est aussi voyageur) ──
+                        $voyageurRecord = DB::table('voyageurs')->where('user_id', $user->id)->first();
+                        if ($voyageurRecord) {
+                            DB::table('reservations')->where('voyageur_id', $user->id)->delete();
+                            DB::table('avis')->where('user_id', $user->id)->delete();
+                            DB::table('responses')
+                                ->where('user_id', $user->id)
+                                ->where('entity', 'voyageur')
+                                ->delete();
+                            DB::table('liked_experiences')->where('user_id', $user->id)->delete();
+                            DB::table('voyageurs')->where('user_id', $user->id)->delete();
+                        }
+
+                        // ── 4. Données communes liées au user (FK avant delete)
+                        DB::table('user_trackings')->where('user_id', $user->id)->delete();
+                        DB::table('user_trackings_archive')->where('user_id', $user->id)->delete();
+                        DB::table('chat_messages')->where('sender_id', $user->id)->delete();
+                        DB::table('chat_channel_users')->where('user_id', $user->id)->delete();
+                        DB::table('notification_settings')->where('user_id', $user->id)->delete();
+                        DB::table('user_d_evices')->where('user_id', $user->id)->delete();
+                        DB::table('user_roles')->where('user_id', $user->id)->delete();
+                        DB::table('contacts')->where('user_id', $user->id)->delete();
+                        DB::table('user_autofacturation_consents')->where('user_id', $user->id)->delete();
+
+                        // ── 5. Fichiers S3 + autres documents ─────────────────
+                        foreach (['profile_path', 'piece_d_identite', 'piece_d_identite_verso', 'KBIS_file', 'about_me_audio'] as $field) {
+                            $deleteS3($user->$field);
+                        }
+                        $user->otherDocuments->each(function ($doc) use ($deleteS3) {
+                            $deleteS3($doc->document_path);
+                            $doc->delete();
+                        });
+
+                        // ── 6. Compte utilisateur ─────────────────────────────
+                        Log::info('DeleteGuide: Guide #' . $user->id . ' (' . $user->email . ') supprimé définitivement par admin');
+                        $user->delete();
+
+                        DB::commit();
+
+                        Notification::make()->title('Guide « ' . $user->name . ' » supprimé définitivement')->success()->send();
+                        $this->redirect(static::getResource()::getUrl('index'));
+
+                    } catch (\Throwable $e) {
+                        DB::rollBack();
+                        Log::error('DeleteGuide: échec suppression user_id=' . $user->id . ' — ' . $e->getMessage());
+
+                        Notification::make()
+                            ->title('Erreur lors de la suppression')
+                            ->body($e->getMessage())
+                            ->danger()
+                            ->send();
                     }
-
-                    // ── 3. Fichiers S3 + autres données utilisateur ───────────
-                    foreach (['profile_path', 'piece_d_identite', 'piece_d_identite_verso', 'KBIS_file', 'about_me_audio'] as $field) {
-                        $deleteS3($user->$field);
-                    }
-                    $user->otherDocuments->each(function ($doc) use ($deleteS3) {
-                        $deleteS3($doc->document_path);
-                        $doc->delete();
-                    });
-
-                    Log::info('DeleteGuide: Guide #' . $user->id . ' (' . $user->email . ') supprimé définitivement par admin');
-                    $user->delete();
-
-                    Notification::make()->title('Guide « ' . $user->name . ' » supprimé définitivement')->success()->send();
-                    $this->redirect(static::getResource()::getUrl('index'));
                 }),
 
             Action::make('retry_payout')
