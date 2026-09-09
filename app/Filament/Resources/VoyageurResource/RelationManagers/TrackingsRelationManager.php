@@ -1,11 +1,10 @@
 <?php
 
-namespace App\Filament\Resources\GuideResource\RelationManagers;
+namespace App\Filament\Resources\VoyageurResource\RelationManagers;
 
 use App\Enums\TrackingAction;
 use App\Exports\UserTrackingsExport;
 use App\Models\UserTracking;
-use Carbon\Carbon;
 use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Tables\Actions\Action;
 use Filament\Tables\Columns\TextColumn;
@@ -19,7 +18,7 @@ use Filament\Forms\Components\DatePicker;
 class TrackingsRelationManager extends RelationManager
 {
     protected static string $relationship = 'userTrackings';
-    protected static ?string $title = 'Historique (3 mois)';
+    protected static ?string $title = 'Historique des actions';
     protected static ?string $icon = 'heroicon-o-clock';
 
     public function table(Table $table): Table
@@ -27,9 +26,8 @@ class TrackingsRelationManager extends RelationManager
         $component = $this;
 
         return $table
-            ->query(fn () => UserTracking::where('user_id', $this->getOwnerRecord()->id)
-                ->where('actor_type', 'guide')
-                ->where('created_at', '>=', Carbon::now()->subMonths(3))
+            ->query(fn () => UserTracking::where('user_id', $this->getOwnerRecord()->user_id)
+                ->where('actor_type', 'voyageur')
                 ->latest()
             )
             ->columns([
@@ -43,6 +41,12 @@ class TrackingsRelationManager extends RelationManager
                     ->badge()
                     ->state(fn (UserTracking $record) => $record->action_label)
                     ->color(fn (UserTracking $record) => $record->action_color),
+
+                TextColumn::make('actor_type')
+                    ->label('Type')
+                    ->badge()
+                    ->color('gray')
+                    ->placeholder('—'),
 
                 TextColumn::make('route')
                     ->label('Route')
@@ -91,9 +95,8 @@ class TrackingsRelationManager extends RelationManager
                     ->action(function () use ($component) {
                         $filters = $component->tableFilters ?? [];
 
-                        // Pour l'export, pas de limite 3 mois par défaut — on applique les filtres admin
-                        $query = UserTracking::where('user_id', $component->getOwnerRecord()->id)
-                            ->where('actor_type', 'guide');
+                        $query = UserTracking::where('user_id', $component->getOwnerRecord()->user_id)
+                            ->where('actor_type', 'voyageur');
 
                         if (!empty($filters['date']['date_from'])) {
                             $query->whereDate('created_at', '>=', $filters['date']['date_from']);
@@ -107,7 +110,7 @@ class TrackingsRelationManager extends RelationManager
 
                         return Excel::download(
                             new UserTrackingsExport($query->latest()),
-                            'historique-actions-guide.xlsx'
+                            'historique-actions-voyageur.xlsx'
                         );
                     }),
             ])

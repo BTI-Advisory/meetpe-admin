@@ -3,6 +3,7 @@
 namespace App\Filament\Resources;
 
 use App\Enums\TrackingAction;
+use App\Exports\UserTrackingsExport;
 use App\Filament\Resources\UserTrackingResource\Pages;
 use App\Models\UserTracking;
 use Filament\Forms\Form;
@@ -11,6 +12,7 @@ use Filament\Infolists\Components\Section;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Infolists\Infolist;
 use Filament\Resources\Resource;
+use Filament\Tables\Actions\Action;
 use Filament\Tables\Actions\ViewAction;
 use Filament\Tables\Columns\BadgeColumn;
 use Filament\Tables\Columns\TextColumn;
@@ -19,6 +21,7 @@ use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Carbon;
+use Maatwebsite\Excel\Facades\Excel;
 
 class UserTrackingResource extends Resource
 {
@@ -163,6 +166,45 @@ class UserTrackingResource extends Resource
                         $query
                             ->when($data['date_from'] ?? null, fn ($q) => $q->whereDate('created_at', '>=', $data['date_from']))
                             ->when($data['date_to'] ?? null, fn ($q) => $q->whereDate('created_at', '<=', $data['date_to']));
+                    }),
+            ])
+            ->headerActions([
+                Action::make('export')
+                    ->label('Exporter Excel')
+                    ->icon('heroicon-o-arrow-down-tray')
+                    ->color('success')
+                    ->action(function ($livewire) {
+                        $filters = $livewire->tableFilters ?? [];
+
+                        $query = UserTracking::with('user');
+
+                        // Action type
+                        if (!empty($filters['action']['value'])) {
+                            $query->where('action', $filters['action']['value']);
+                        }
+
+                        // Actor type
+                        if (!empty($filters['actor_type']['value'])) {
+                            $query->where('actor_type', $filters['actor_type']['value']);
+                        }
+
+                        // Utilisateur (nom)
+                        if (!empty($filters['utilisateur']['name'])) {
+                            $query->whereHas('user', fn ($q) => $q->where('name', 'like', '%' . $filters['utilisateur']['name'] . '%'));
+                        }
+
+                        // Période
+                        if (!empty($filters['periode']['date_from'])) {
+                            $query->whereDate('created_at', '>=', $filters['periode']['date_from']);
+                        }
+                        if (!empty($filters['periode']['date_to'])) {
+                            $query->whereDate('created_at', '<=', $filters['periode']['date_to']);
+                        }
+
+                        return Excel::download(
+                            new UserTrackingsExport($query->latest()),
+                            'historique-actions.xlsx'
+                        );
                     }),
             ])
             ->actions([
