@@ -27,6 +27,8 @@ class UserTrackingsExport implements FromQuery, WithHeadings, WithMapping, WithC
     public function map($record): array
     {
         return [
+            $record->user?->name ?? '—',
+            $record->user?->email ?? '—',
             $record->created_at?->format('d/m/Y H:i') ?? '',
             $record->action_label,
             $record->actor_type ?? '—',
@@ -38,7 +40,7 @@ class UserTrackingsExport implements FromQuery, WithHeadings, WithMapping, WithC
 
     public function headings(): array
     {
-        return ['Date', 'Action', 'Type', 'Route', 'Adresse IP', 'Méthode'];
+        return ['Nom', 'Email', 'Date', 'Action', 'Type', 'Route', 'Adresse IP', 'Méthode'];
     }
 
     public function styles(Worksheet $sheet): array
