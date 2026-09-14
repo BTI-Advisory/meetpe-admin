@@ -13,27 +13,52 @@
                 <p class="text-sm text-gray-400 dark:text-gray-500">Aucune photo</p>
             </div>
         </div>
+
     @elseif ($total === 1)
-        <div class="rounded-2xl overflow-hidden shadow-lg" style="height:420px">
-            <img src="{{ $photos[0] }}" class="w-full h-full object-cover" alt="Photo" />
+        <div class="relative rounded-2xl overflow-hidden shadow-lg" style="height:420px">
+            {{-- Fond flouté --}}
+            <img src="{{ $photos[0] }}"
+                 aria-hidden="true"
+                 style="position:absolute; inset:0; width:100%; height:100%; object-fit:cover;
+                        filter:blur(18px) brightness(0.55); transform:scale(1.08); z-index:0;" />
+            {{-- Image complète, sans déformation --}}
+            <div style="position:absolute; inset:0; display:flex; align-items:center; justify-content:center; z-index:1;">
+                <img src="{{ $photos[0] }}"
+                     alt="Photo"
+                     style="max-width:100%; max-height:100%; width:auto; height:auto; display:block;" />
+            </div>
         </div>
+
     @else
         <div
             x-data="{ current: 0 }"
             wire:ignore
-            class="relative rounded-2xl overflow-hidden shadow-xl group"
-            style="height:420px; background:#0f172a"
+            class="relative rounded-2xl overflow-hidden shadow-xl"
+            style="height:420px"
         >
-            {{-- Slides --}}
             @foreach ($photos as $i => $url)
                 <div x-show="current === {{ $i }}" x-cloak
                      x-transition:enter="transition ease-out duration-300"
-                     x-transition:enter-start="opacity-0 scale-105"
-                     x-transition:enter-end="opacity-100 scale-100"
-                     class="absolute inset-0">
-                    <img src="{{ $url }}" class="w-full h-full object-cover" alt="Photo {{ $i + 1 }}" />
-                    {{-- Dégradé bas pour lisibilité des contrôles --}}
-                    <div class="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-black/60 to-transparent"></div>
+                     x-transition:enter-start="opacity-0"
+                     x-transition:enter-end="opacity-100"
+                     style="position:absolute; inset:0;">
+
+                    {{-- Fond flouté --}}
+                    <img src="{{ $url }}"
+                         aria-hidden="true"
+                         style="position:absolute; inset:0; width:100%; height:100%; object-fit:cover;
+                                filter:blur(18px) brightness(0.55); transform:scale(1.08); z-index:0;" />
+
+                    {{-- Image complète, sans déformation --}}
+                    <div style="position:absolute; inset:0; display:flex; align-items:center; justify-content:center; z-index:1;">
+                        <img src="{{ $url }}"
+                             alt="Photo {{ $i + 1 }}"
+                             style="max-width:100%; max-height:100%; width:auto; height:auto; display:block;" />
+                    </div>
+
+                    {{-- Dégradé bas --}}
+                    <div style="position:absolute; inset-inline:0; bottom:0; height:6rem;
+                                background:linear-gradient(to top, rgba(0,0,0,0.5), transparent); z-index:2;"></div>
                 </div>
             @endforeach
 
@@ -73,15 +98,15 @@
                 </svg>
             </button>
 
-            {{-- Indicateurs (points) --}}
-            <div class="absolute bottom-4 left-1/2 -translate-x-1/2 z-20 flex items-center gap-1.5">
+            {{-- Indicateurs --}}
+            <div style="position:absolute; bottom:1rem; left:50%; transform:translateX(-50%); z-index:20; display:flex; gap:0.375rem; align-items:center;">
                 @foreach ($photos as $i => $url)
                     <button
                         @click="current = {{ $i }}"
-                        :class="current === {{ $i }}
-                            ? 'w-6 h-2 bg-white'
-                            : 'w-2 h-2 bg-white/50 hover:bg-white/80'"
-                        class="rounded-full transition-all duration-300 focus:outline-none"
+                        :style="current === {{ $i }}
+                            ? 'width:1.5rem; height:0.5rem; background:white;'
+                            : 'width:0.5rem; height:0.5rem; background:rgba(255,255,255,0.5);'"
+                        style="border-radius:9999px; border:none; cursor:pointer; transition:all 0.3s; padding:0;"
                         aria-label="Photo {{ $i + 1 }}"
                     ></button>
                 @endforeach
@@ -89,11 +114,10 @@
 
             {{-- Compteur --}}
             <div
-                class="absolute top-4 right-4 z-20
-                       bg-black/50 backdrop-blur-sm
-                       text-white text-xs font-medium
-                       px-3 py-1.5 rounded-full
-                       shadow-sm"
+                style="position:absolute; top:1rem; right:1rem; z-index:20;
+                       background:rgba(0,0,0,0.5); backdrop-filter:blur(4px);
+                       color:white; font-size:0.75rem; font-weight:500;
+                       padding:0.375rem 0.75rem; border-radius:9999px;"
                 x-text="(current + 1) + ' / {{ $total }}'"
             ></div>
         </div>

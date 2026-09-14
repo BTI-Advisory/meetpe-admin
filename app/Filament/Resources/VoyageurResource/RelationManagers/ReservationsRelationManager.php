@@ -4,6 +4,7 @@ namespace App\Filament\Resources\VoyageurResource\RelationManagers;
 
 use App\Enums\ReservationStatus;
 use App\Filament\Resources\GuideExperienceResource;
+use App\Models\Reservation;
 use Filament\Forms\Form;
 use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Tables\Columns\TextColumn;
@@ -22,6 +23,12 @@ class ReservationsRelationManager extends RelationManager
     public function table(Table $table): Table
     {
         return $table
+            ->query(
+                Reservation::with(['experience:id,title,ville'])
+                    ->where('voyageur_id', $this->getOwnerRecord()->user_id)
+                    ->where('status', '!=', ReservationStatus::CREATED->value)
+                    ->latest('created_at')
+            )
             ->columns([
                 TextColumn::make('experience.title')
                     ->label('Expérience')

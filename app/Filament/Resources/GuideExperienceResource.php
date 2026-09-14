@@ -80,7 +80,7 @@ class GuideExperienceResource extends Resource
                     ->visibility('public')
                     ->required()
                     ->maxSize(20480)
-                    ->imagePreviewHeight('160')
+                    ->imagePreviewHeight('200')
                     ->columnSpanFull(),
                 FileUpload::make('photo_image_0')
                     ->label('Photo 2')
@@ -90,7 +90,7 @@ class GuideExperienceResource extends Resource
                     ->visibility('public')
                     ->deletable()
                     ->maxSize(20480)
-                    ->imagePreviewHeight('120'),
+                    ->imagePreviewHeight('140'),
                 FileUpload::make('photo_image_1')
                     ->label('Photo 3')
                     ->image()
@@ -99,7 +99,7 @@ class GuideExperienceResource extends Resource
                     ->visibility('public')
                     ->deletable()
                     ->maxSize(20480)
-                    ->imagePreviewHeight('120'),
+                    ->imagePreviewHeight('140'),
                 FileUpload::make('photo_image_2')
                     ->label('Photo 4')
                     ->image()
@@ -108,7 +108,7 @@ class GuideExperienceResource extends Resource
                     ->visibility('public')
                     ->deletable()
                     ->maxSize(20480)
-                    ->imagePreviewHeight('120'),
+                    ->imagePreviewHeight('140'),
                 FileUpload::make('photo_image_3')
                     ->label('Photo 5')
                     ->image()
@@ -117,7 +117,7 @@ class GuideExperienceResource extends Resource
                     ->visibility('public')
                     ->deletable()
                     ->maxSize(20480)
-                    ->imagePreviewHeight('120'),
+                    ->imagePreviewHeight('140'),
                 FileUpload::make('photo_image_4')
                     ->label('Photo 6')
                     ->image()
@@ -126,7 +126,7 @@ class GuideExperienceResource extends Resource
                     ->visibility('public')
                     ->deletable()
                     ->maxSize(20480)
-                    ->imagePreviewHeight('120'),
+                    ->imagePreviewHeight('140'),
             ])->columns(3),
 
             // ── Informations principales ──────────────────────────────────────

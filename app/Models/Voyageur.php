@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use App\Models\UserTracking;
 
 class Voyageur extends Model
 {
@@ -37,4 +38,11 @@ class Voyageur extends Model
     {
         return $this->hasMany(Reservation::class,'voyageur_id','user_id');
     }
+
+    public function userTrackings()
+    {
+        return $this->hasMany(UserTracking::class, 'user_id', 'user_id');
+    }
+
+
 }

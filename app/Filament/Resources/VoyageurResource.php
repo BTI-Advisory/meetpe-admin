@@ -5,6 +5,7 @@ namespace App\Filament\Resources;
 use App\Exports\VoyageursExport;
 use App\Filament\Resources\VoyageurResource\Pages;
 use App\Filament\Resources\VoyageurResource\RelationManagers\ReservationsRelationManager;
+use App\Filament\Resources\VoyageurResource\RelationManagers\TrackingsRelationManager;
 use App\Models\Voyageur;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Form;
@@ -122,6 +123,7 @@ class VoyageurResource extends Resource
                         ->state(fn (Voyageur $record) => $record->reservations()->count()),
                 ]),
             ]),
+
         ]);
     }
 
@@ -201,10 +203,11 @@ ViewAction::make()->label('Détail'),
             ->defaultSort('user_created_at', 'desc');
     }
 
-    public static function getRelationManagers(): array
+    public static function getRelations(): array
     {
         return [
             ReservationsRelationManager::class,
+            TrackingsRelationManager::class,
         ];
     }
 
