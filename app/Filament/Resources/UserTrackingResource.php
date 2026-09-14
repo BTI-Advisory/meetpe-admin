@@ -176,7 +176,7 @@ class UserTrackingResource extends Resource
                     ->action(function ($livewire) {
                         $filters = $livewire->tableFilters ?? [];
 
-                        $query = UserTracking::with('user');
+                        $query = UserTracking::query();
 
                         // Action type
                         if (!empty($filters['action']['value'])) {
