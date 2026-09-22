@@ -25,14 +25,19 @@ class ReservationsExport implements FromArray, WithHeadings
             $voyageur = $reservation->voyageur;
 
             $rows[] = [
+                $reservation->id,
+                $reservation->voyageur_id,
+                $reservation->experience_id,
+                $reservation->created_at?->format('Y-m-d H:i'),
                 $reservation->date_time,
+                $experience?->ville ?? '',
                 $experience?->title,
                 $guide?->name,
                 $guide?->email,
                 $voyageur?->name,
                 $voyageur?->email,
-                $experience?->title,
                 $reservation->status,
+                $reservation->is_payed ? 'Payé' : 'Non payé',
                 $reservation->nombre_des_voyageurs,
                 $reservation->is_group ? 'Groupe' : 'Individuel',
                 $reservation->total_price,
@@ -52,13 +57,19 @@ class ReservationsExport implements FromArray, WithHeadings
     public function headings(): array
     {
         return [
-            'Date de réservation',
+            'Reservation ID',
+            'Traveler ID',
+            'Experience ID',
+            'Date de création',
+            'Date / heure de l\'expérience',
+            'Ville',
             'Expérience',
             'Nom du guide',
             'Email du guide',
             'Nom du voyageur',
             'Email du voyageur',
-            'Statut de réservation',
+            'Statut',
+            'Statut du paiement',
             'Nombre de voyageurs',
             'Type (Groupe / Individuel)',
             'Montant payé par le voyageur (€)',
@@ -66,9 +77,9 @@ class ReservationsExport implements FromArray, WithHeadings
             'Remboursement ?',
             'Montant remboursé (€)',
             'Annulé par le voyageur ?',
-            'Raison de l’annulation',
-            'Description de l’annulation',
-            'Statut du remboursement'
+            'Raison de l\'annulation',
+            'Description de l\'annulation',
+            'Statut du remboursement',
         ];
     }
 
