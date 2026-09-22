@@ -3,15 +3,18 @@
 namespace App\Filament\Resources;
 
 use App\Enums\ReservationStatus;
+use App\Exports\IncompleteReservationsExport;
 use App\Filament\Resources\ReservationIncompleteResource\Pages;
 use App\Models\Reservation;
 use App\Models\Voyageur;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
+use Filament\Tables\Actions\Action;
 use Filament\Tables\Columns\ImageColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Illuminate\Support\Facades\Storage;
+use Maatwebsite\Excel\Facades\Excel;
 
 class ReservationIncompleteResource extends Resource
 {
@@ -104,6 +107,13 @@ class ReservationIncompleteResource extends Resource
                     ->color('info'),
             ])
             ->defaultSort('created_at', 'desc')
+            ->headerActions([
+                Action::make('export')
+                    ->label('Exporter Excel')
+                    ->icon('heroicon-o-arrow-down-tray')
+                    ->color('success')
+                    ->action(fn () => Excel::download(new IncompleteReservationsExport(), 'reservations-incompletes.xlsx')),
+            ])
             ->actions([])
             ->bulkActions([])
             ->paginated([10, 25, 50]);
