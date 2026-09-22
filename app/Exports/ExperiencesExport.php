@@ -21,7 +21,7 @@ class ExperiencesExport implements FromGenerator, WithHeadings
         $chunkSize = 100;
 
         while (true) {
-            $experiences = GuideExperience::with(['plannings.schedules', 'user'])
+            $experiences = GuideExperience::with(['dispoPlannings.schedules', 'user'])
                 ->when(!empty($this->status), fn ($q) => $q->where('status', $this->status))
                 ->orderBy('id')
                 ->offset($offset)
@@ -42,7 +42,7 @@ class ExperiencesExport implements FromGenerator, WithHeadings
                 ->groupBy('entity_id');
 
             foreach ($experiences as $experience) {
-                $plannings  = $experience->plannings;
+                $plannings  = $experience->dispoPlannings;
                 $expResp    = $allResponses->get($experience->id, collect())->groupBy('question_id');
                 $categories = $expResp->get(5, collect())->pluck('choice_txt')->implode(', ');
                 $languages  = $expResp->get(6, collect())->pluck('choice_txt')->implode(', ');

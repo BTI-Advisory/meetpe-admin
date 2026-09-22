@@ -40,17 +40,18 @@ class UserTrackingsExport implements FromQuery, WithHeadings, WithMapping, WithC
 
     public function headings(): array
     {
-        return ['Nom', 'Email', 'Date', 'Action', 'Type', 'Route', 'Adresse IP', 'Méthode', 'Métadonnées'];
+        return ['ID utilisateur', 'Nom', 'Email', 'Date', 'Type d\'action', 'Action', 'Route', 'Adresse IP', 'Méthode', 'Métadonnées'];
     }
 
     public function map($record): array
     {
         return [
+            $record->user_id,
             $record->user?->name ?? '—',
             $record->user?->email ?? '—',
             $record->created_at?->format('d/m/Y H:i') ?? '',
-            $record->action_label,
             $record->actor_type ?? '—',
+            $record->action_label,
             $record->route ?? '—',
             $record->ip_address ?? '—',
             $record->method ?? '—',
@@ -61,22 +62,23 @@ class UserTrackingsExport implements FromQuery, WithHeadings, WithMapping, WithC
     public function columnWidths(): array
     {
         return [
-            'A' => 22,  // Nom
-            'B' => 30,  // Email
-            'C' => 16,  // Date
-            'D' => 20,  // Action
-            'E' => 12,  // Type
-            'F' => 40,  // Route
-            'G' => 16,  // IP
-            'H' => 10,  // Méthode
-            'I' => 45,  // Métadonnées
+            'A' => 14,  // ID utilisateur
+            'B' => 22,  // Nom
+            'C' => 30,  // Email
+            'D' => 16,  // Date
+            'E' => 14,  // Type d'action
+            'F' => 20,  // Action
+            'G' => 40,  // Route
+            'H' => 16,  // IP
+            'I' => 10,  // Méthode
+            'J' => 45,  // Métadonnées
         ];
     }
 
     public function styles(Worksheet $sheet): array
     {
         // Header row: bold + background
-        $sheet->getStyle('A1:I1')->applyFromArray([
+        $sheet->getStyle('A1:J1')->applyFromArray([
             'font'      => ['bold' => true, 'color' => ['rgb' => 'FFFFFF']],
             'fill'      => ['fillType' => 'solid', 'color' => ['rgb' => '374151']],
             'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER],
@@ -84,12 +86,12 @@ class UserTrackingsExport implements FromQuery, WithHeadings, WithMapping, WithC
 
         // Metadata column: wrap text + top-align
         $lastRow = $sheet->getHighestRow();
-        $sheet->getStyle('I2:I' . $lastRow)->getAlignment()
+        $sheet->getStyle('J2:J' . $lastRow)->getAlignment()
             ->setWrapText(true)
             ->setVertical(Alignment::VERTICAL_TOP);
 
         // All data rows: vertical top
-        $sheet->getStyle('A2:H' . $lastRow)->getAlignment()
+        $sheet->getStyle('A2:I' . $lastRow)->getAlignment()
             ->setVertical(Alignment::VERTICAL_TOP);
 
         return [];

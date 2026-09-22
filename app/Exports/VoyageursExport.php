@@ -37,11 +37,17 @@ class VoyageursExport implements FromArray, WithHeadings
             $get = fn (int $qid) => $responses->get($qid, collect())->pluck('choice_txt')->implode(', ');
 
             $rows[] = [
+                $voyageur->voyageur_id,
                 $user->name ?? '',
                 $user->email ?? '',
                 $user->phone_number ?? '',
+                $user->birth_date ?? '',
                 $user->age ?? '',
+                $voyageur->ville ?? '',
+                $voyageur->pays ?? '',
+                $user->is_verified_account ? 'Actif' : 'Inactif',
                 $user->created_at ? $user->created_at->format('Y-m-d') : '',
+                $user->device_language ?? '',
 
                 $get(2),   // Comment tu voyages ?
                 $get(5),   // Il y a des sujets qui te plaisent ?
@@ -50,7 +56,6 @@ class VoyageursExport implements FromArray, WithHeadings
 
                 $voyageur->date_arrivee ?? '',
                 $voyageur->date_depart ?? '',
-                trim(($voyageur->ville ?? '') . ' ' . ($voyageur->pays ?? '')),
 
                 $reservations->count(),
                 $reservations->where('status', ReservationStatus::ARCHIVÉE->value)->count(),
@@ -64,18 +69,23 @@ class VoyageursExport implements FromArray, WithHeadings
     public function headings(): array
     {
         return [
+            'Traveler ID',
             'Nom',
             'Email',
             'Téléphone',
+            'Date de naissance',
             'Âge',
-            'Compte créé le',
+            'Ville',
+            'Pays',
+            'Statut',
+            'Date d\'inscription',
+            'Langue de l\'app',
             'Comment tu voyages ?',
             'Sujets préférés',
             'Langues',
             'Déplacement',
             'Date d\'arrivée',
             'Date de départ',
-            'Destination',
             'Nb total réservations',
             'Nb réservations réalisées',
             'Nb réservations annulées',
