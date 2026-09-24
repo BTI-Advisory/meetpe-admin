@@ -81,7 +81,11 @@ class ReservationResource extends Resource
                     TextEntry::make('voyageur.name')->label('Nom voyageur')
                         ->state(fn ($record) => $record->voyageur?->name ?? $record->nom)
                         ->placeholder('—')
-                        ->url(fn ($record) => $record->voyageur_id ? VoyageurResource::getUrl('view', ['record' => Voyageur::where('user_id', $record->voyageur_id)->value('voyageur_id')]) : null),
+                        ->url(function ($record) {
+                            if (!$record->voyageur_id) return null;
+                            $vid = Voyageur::where('user_id', $record->voyageur_id)->value('voyageur_id');
+                            return $vid ? VoyageurResource::getUrl('view', ['record' => $vid]) : null;
+                        }),
                     TextEntry::make('phone')->label('Téléphone')
                         ->state(fn ($record) => $record->voyageur?->phone_number ?? $record->phone)
                         ->placeholder('—'),
@@ -205,7 +209,11 @@ class ReservationResource extends Resource
                         ->orderBy('vuser.name', $direction)
                     )
                     ->placeholder('—')
-                    ->url(fn ($record) => $record->voyageur_id ? VoyageurResource::getUrl('view', ['record' => Voyageur::where('user_id', $record->voyageur_id)->value('voyageur_id')]) : null),
+                    ->url(function ($record) {
+                        if (!$record->voyageur_id) return null;
+                        $vid = Voyageur::where('user_id', $record->voyageur_id)->value('voyageur_id');
+                        return $vid ? VoyageurResource::getUrl('view', ['record' => $vid]) : null;
+                    }),
 
                 TextColumn::make('experience.ville')
                     ->label('Ville')
