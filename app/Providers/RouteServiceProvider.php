@@ -28,6 +28,15 @@ class RouteServiceProvider extends ServiceProvider
             return Limit::perMinute(60)->by($request->user()?->id ?: $request->ip());
         });
 
+        RateLimiter::for('crm', function (Request $request) {
+            return Limit::perMinute(60)->by($request->user()?->id ?: $request->ip())
+                ->response(fn () => response()->json([
+                    'error'   => 'Too Many Requests',
+                    'message' => 'Limite de 60 requêtes par minute atteinte.',
+                    'status'  => 429,
+                ], 429));
+        });
+
         $this->routes(function () {
             Route::middleware('api')
                 ->prefix('api')
