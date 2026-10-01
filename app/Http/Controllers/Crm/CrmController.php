@@ -325,7 +325,7 @@ class CrmController extends Controller
         $data = $paginated->getCollection()->map(function (Reservation $r) {
             return [
                 'reservation_id'    => $r->id,
-                'voyageur_id'       => $r->voyageur_id,
+                'voyageur_user_id'  => $r->voyageur_id,
                 'experience_id'     => $r->experience_id,
                 'date_creation'     => $r->created_at?->toIso8601String(),
                 'date_experience'   => $r->date_time,
@@ -391,7 +391,7 @@ class CrmController extends Controller
         $data = $paginated->getCollection()->map(function (Reservation $r) {
             return [
                 'reservation_id'    => $r->id,
-                'voyageur_id'       => $r->voyageur_id,
+                'voyageur_user_id'  => $r->voyageur_id,
                 'experience_id'     => $r->experience_id,
                 'date_tentative'    => $r->created_at?->toIso8601String(),
                 'date_experience'   => $r->date_time,
