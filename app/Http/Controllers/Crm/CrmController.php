@@ -46,7 +46,8 @@ class CrmController extends Controller
 
         $query = User::whereHas('guide')
             ->with(['guide', 'experiences'])
-            ->orderByDesc('created_at');
+            ->orderByDesc('created_at')
+            ->orderByDesc('id');
 
         $this->applyDateFilters($query, $request);
 
@@ -112,7 +113,8 @@ class CrmController extends Controller
         ]);
 
         $query = Voyageur::with(['user', 'reservations'])
-            ->orderByDesc('created_at');
+            ->orderByDesc('created_at')
+            ->orderByDesc('id');
 
         if ($request->filled('from')) {
             $query->whereDate('created_at', '>=', $request->get('from'));
@@ -184,7 +186,8 @@ class CrmController extends Controller
                 'photoprincipal',
                 'photos',
             ])
-            ->orderByDesc('created_at');
+            ->orderByDesc('created_at')
+            ->orderByDesc('id');
 
         $this->applyDateFilters($query, $request);
 
@@ -308,7 +311,8 @@ class CrmController extends Controller
 
         $query = Reservation::with(['experience.user', 'voyageur'])
             ->whereNotIn('status', [ReservationStatus::CREATED->value, ReservationStatus::ABANDONED->value])
-            ->orderByDesc('created_at');
+            ->orderByDesc('created_at')
+            ->orderByDesc('id');
 
         $this->applyDateFilters($query, $request);
 
@@ -377,7 +381,8 @@ class CrmController extends Controller
 
         $query = Reservation::with(['experience', 'voyageur'])
             ->whereIn('status', [ReservationStatus::CREATED->value, ReservationStatus::ABANDONED->value])
-            ->orderByDesc('created_at');
+            ->orderByDesc('created_at')
+            ->orderByDesc('id');
 
         $this->applyDateFilters($query, $request);
 
@@ -433,7 +438,8 @@ class CrmController extends Controller
         ]);
 
         $query = UserTracking::with('user:id,name,email')
-            ->orderByDesc('created_at');
+            ->orderByDesc('created_at')
+            ->orderByDesc('id');
 
         if ($request->filled('from')) {
             $query->whereDate('created_at', '>=', $request->get('from'));
