@@ -114,7 +114,7 @@ class CrmController extends Controller
 
         $query = Voyageur::with(['user', 'reservations'])
             ->orderByDesc('created_at')
-            ->orderByDesc('id');
+            ->orderByDesc('voyageur_id');
 
         if ($request->filled('from')) {
             $query->whereDate('created_at', '>=', $request->get('from'));
