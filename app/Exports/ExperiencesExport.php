@@ -21,7 +21,7 @@ class ExperiencesExport implements FromGenerator, WithHeadings
         $chunkSize = 100;
 
         while (true) {
-            $experiences = GuideExperience::with(['dispoPlannings.schedules', 'user'])
+            $experiences = GuideExperience::with(['dispoPlannings.schedules', 'user.guide'])
                 ->when(!empty($this->status), fn ($q) => $q->where('status', $this->status))
                 ->orderBy('id')
                 ->offset($offset)
@@ -47,12 +47,14 @@ class ExperiencesExport implements FromGenerator, WithHeadings
                 $categories = $expResp->get(5, collect())->pluck('choice_txt')->implode(', ');
                 $languages  = $expResp->get(6, collect())->pluck('choice_txt')->implode(', ');
                 $guideLine  = $experience->user->name . ' | ' . $experience->user->email . "\n" . $experience->user->phone_number;
+                $guideId    = $experience->user->guide->first()?->guide_id ?? '';
 
                 $isFirstExperienceLine = true;
 
                 if ($plannings->isEmpty()) {
                     yield [
                         $experience->id,
+                        $guideId,
                         $experience->title,
                         $guideLine,
                         $experience->status,
@@ -77,7 +79,8 @@ class ExperiencesExport implements FromGenerator, WithHeadings
 
                         foreach ($planning->schedules as $schedule) {
                             yield [
-                                $isFirstExperienceLine ? $experience->id : '',
+                                $experience->id,
+                                $guideId,
                                 $isFirstExperienceLine ? $experience->title : '',
                                 $isFirstExperienceLine ? $guideLine : '',
                                 $isFirstExperienceLine ? $experience->status : '',
@@ -112,7 +115,8 @@ class ExperiencesExport implements FromGenerator, WithHeadings
     public function headings(): array
     {
         return [
-            'ID',
+            'Experience ID',
+            'Guide ID',
             'Titre',
             'Guide',
             'Statut',

@@ -42,7 +42,11 @@ class ReservationsRelationManager extends RelationManager
                 TextColumn::make('voyageur_name')
                     ->label('Voyageur')
                     ->searchable()
-                    ->url(fn ($record) => $record->voyageur_id ? VoyageurResource::getUrl('view', ['record' => Voyageur::where('user_id', $record->voyageur_id)->value('voyageur_id')]) : null),
+                    ->url(function ($record) {
+                        if (!$record->voyageur_id) return null;
+                        $vid = Voyageur::where('user_id', $record->voyageur_id)->value('voyageur_id');
+                        return $vid ? VoyageurResource::getUrl('view', ['record' => $vid]) : null;
+                    }),
 
                 TextColumn::make('date_time')
                     ->label('Date')

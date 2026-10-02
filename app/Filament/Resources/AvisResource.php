@@ -45,7 +45,11 @@ class AvisResource extends Resource
             Section::make('Détail de l\'avis')->schema([
                 Grid::make(2)->schema([
                     TextEntry::make('user.name')->label('Voyageur')
-                        ->url(fn ($record) => $record->user_id ? VoyageurResource::getUrl('view', ['record' => Voyageur::where('user_id', $record->user_id)->value('voyageur_id')]) : null),
+                        ->url(function ($record) {
+                            if (!$record->user_id) return null;
+                            $vid = Voyageur::where('user_id', $record->user_id)->value('voyageur_id');
+                            return $vid ? VoyageurResource::getUrl('view', ['record' => $vid]) : null;
+                        }),
                     TextEntry::make('user.email')->label('Email')->copyable(),
                     TextEntry::make('experience.title')->label('Expérience')->placeholder('—')
                         ->url(fn ($record) => $record->experience_id ? GuideExperienceResource::getUrl('view', ['record' => $record->experience_id]) : null),
@@ -68,7 +72,11 @@ class AvisResource extends Resource
                     ->label('Voyageur')
                     ->searchable()
                     ->sortable()
-                    ->url(fn ($record) => $record->user_id ? VoyageurResource::getUrl('view', ['record' => Voyageur::where('user_id', $record->user_id)->value('voyageur_id')]) : null),
+                    ->url(function ($record) {
+                        if (!$record->user_id) return null;
+                        $vid = Voyageur::where('user_id', $record->user_id)->value('voyageur_id');
+                        return $vid ? VoyageurResource::getUrl('view', ['record' => $vid]) : null;
+                    }),
 
                 TextColumn::make('experience.title')
                     ->label('Expérience')
