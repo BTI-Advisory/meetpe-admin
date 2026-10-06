@@ -16,6 +16,7 @@ use Carbon\Carbon;
 use Filament\Actions\Action;
 use Filament\Actions\EditAction;
 use Filament\Forms;
+use App\Filament\Infolists\Components\DocumentEntry;
 use Filament\Infolists\Components\Grid;
 use Filament\Infolists\Components\ImageEntry;
 use Filament\Infolists\Components\RepeatableEntry;
@@ -430,12 +431,12 @@ class ViewGuide extends ViewRecord
                 ->icon('heroicon-o-identification')
                 ->collapsible()
                 ->schema([
-                    ImageEntry::make('piece_d_identite')
-                        ->label('Pièce d\'identité (recto)')->disk('s3')->height(200)->placeholder('—'),
-                    ImageEntry::make('piece_d_identite_verso')
-                        ->label('Pièce d\'identité (verso)')->disk('s3')->height(200)->placeholder('—'),
-                    ImageEntry::make('KBIS_file')
-                        ->label('KBIS')->disk('s3')->height(200)->placeholder('—'),
+                    DocumentEntry::make('piece_d_identite')
+                        ->label('Pièce d\'identité (recto)'),
+                    DocumentEntry::make('piece_d_identite_verso')
+                        ->label('Pièce d\'identité (verso)'),
+                    DocumentEntry::make('KBIS_file')
+                        ->label('KBIS'),
                 ])->columns(3),
 
             Section::make('Autres documents')
@@ -448,7 +449,8 @@ class ViewGuide extends ViewRecord
                         ->label('')
                         ->schema([
                             TextEntry::make('document_title')->label('Titre')->placeholder('—'),
-                            ImageEntry::make('document_path')->label('Document')->disk('s3')->height(180),
+                            DocumentEntry::make('document_path')
+                                ->label('Document'),
                         ])->columns(2),
                 ]),
 
