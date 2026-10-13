@@ -35,8 +35,10 @@ use Filament\Tables\Actions\EditAction;
 use Filament\Tables\Actions\ViewAction;
 use Filament\Tables\Columns\ImageColumn;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Columns\ToggleColumn;
 use Filament\Tables\Filters\Filter;
 use Filament\Tables\Filters\SelectFilter;
+use Filament\Tables\Filters\TernaryFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\App;
@@ -44,6 +46,9 @@ use Illuminate\Support\Facades\DB;
 
 class GuideExperienceResource extends Resource
 {
+    /** Nombre d'expériences affichées dans la section « À la une » de l'app (HomeController::LIMIT côté API). */
+    private const HOME_FEATURED_LIMIT = 8;
+
     protected static ?string $model = GuideExperience::class;
     protected static ?string $navigationIcon = 'heroicon-o-map';
     protected static ?string $navigationLabel = 'Expériences';
@@ -217,6 +222,10 @@ class GuideExperienceResource extends Resource
                         ->label('Photos')
                         ->columnSpanFull(),
                     TextEntry::make('title')->label('Titre'),
+                    TextEntry::make('featured_at')
+                        ->label('À la une depuis')
+                        ->dateTime('d/m/Y H:i')
+                        ->placeholder('Pas à la une'),
                     TextEntry::make('status')->label('Statut')->badge()
                         ->color(fn (string $state): string => match ($state) {
                             GuideExperienceStatusEnum::ONLINE->value          => 'success',
@@ -502,6 +511,25 @@ class GuideExperienceResource extends Resource
                         return $map[$key] ?? 'gray';
                     }),
 
+                // Section « À la une » de la home de l'app : seules les expériences en ligne peuvent y figurer
+                ToggleColumn::make('is_featured')
+                    ->label('À la une')
+                    ->sortable()
+                    ->disabled(fn ($record) => ($record->getAttributes()['status'] ?? null) !== GuideExperienceStatusEnum::ONLINE->value)
+                    ->tooltip(fn ($record) => ($record->getAttributes()['status'] ?? null) !== GuideExperienceStatusEnum::ONLINE->value
+                        ? 'Seules les expériences en ligne peuvent être mises à la une'
+                        : null)
+                    ->afterStateUpdated(function ($record, $state) {
+                        $count = GuideExperience::where('is_featured', true)->count();
+                        Notification::make()
+                            ->title($state ? 'Expérience mise à la une' : 'Expérience retirée de la une')
+                            ->body($count > self::HOME_FEATURED_LIMIT
+                                ? "{$count} expériences sont à la une : l'app n'affiche que les " . self::HOME_FEATURED_LIMIT . ' plus récemment mises en avant.'
+                                : "{$count} expérience(s) à la une.")
+                            ->color($count > self::HOME_FEATURED_LIMIT ? 'warning' : 'success')
+                            ->send();
+                    }),
+
                 TextColumn::make('raison')
                     ->label('Raison')
                     ->limit(40)
@@ -514,6 +542,9 @@ class GuideExperienceResource extends Resource
                     ->sortable(),
             ])
             ->filters([
+                TernaryFilter::make('is_featured')
+                    ->label('À la une'),
+
                 SelectFilter::make('status')
                     ->label('Statut')
                     ->options(collect(GuideExperienceStatusEnum::cases())
