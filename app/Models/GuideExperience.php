@@ -41,6 +41,9 @@ class GuideExperience extends Model
         "dernier_minute_reservation",
         "max_group_size",
         "min_group_size_prive",
+        "is_featured",
+        "featured_at",
+        "published_at",
     ];
     public function getTitleForLocale(string $locale): string
     {
@@ -197,6 +200,9 @@ class GuideExperience extends Model
         "support_group_prive" => "boolean",
         "discount_kids_between_2_and_12" => "boolean",
         "nombre_des_voyageur" => "integer",
+        "is_featured" => "boolean",
+        "featured_at" => "datetime",
+        "published_at" => "datetime",
     ];
 
     public function getFullAddress()
