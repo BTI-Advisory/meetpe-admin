@@ -27,14 +27,14 @@ class GuideExperienceObserver
         // Valeur brute : l'accesseur status renvoie le libellé traduit
         $status = $experience->getAttributes()['status'] ?? null;
 
-        // Première mise en ligne : alimente les sections « Nouveautés » et « Sélection de la semaine »
+        // Première mise en ligne : alimente les sections « Nouveautés » et « Nouvelles expériences cette semaine »
         if ($experience->isDirty('status')
             && $status === GuideExperienceStatusEnum::ONLINE->value
             && is_null($experience->published_at)) {
             $experience->published_at = now();
         }
 
-        // « À la une » : les plus récemment mises en avant apparaissent en premier
+        // « Nos coups de cœur » : les plus récemment ajoutées apparaissent en premier
         if ($experience->isDirty('is_featured')) {
             $experience->featured_at = $experience->is_featured ? now() : null;
         }

@@ -46,7 +46,7 @@ use Illuminate\Support\Facades\DB;
 
 class GuideExperienceResource extends Resource
 {
-    /** Nombre d'expériences affichées dans la section « À la une » de l'app (HomeController::LIMIT côté API). */
+    /** Nombre d'expériences affichées dans la section « Nos coups de cœur » de l'app (HomeController::LIMIT côté API). */
     private const HOME_FEATURED_LIMIT = 8;
 
     protected static ?string $model = GuideExperience::class;
@@ -223,9 +223,9 @@ class GuideExperienceResource extends Resource
                         ->columnSpanFull(),
                     TextEntry::make('title')->label('Titre'),
                     TextEntry::make('featured_at')
-                        ->label('À la une depuis')
+                        ->label('Coup de cœur depuis')
                         ->dateTime('d/m/Y H:i')
-                        ->placeholder('Pas à la une'),
+                        ->placeholder('Non'),
                     TextEntry::make('status')->label('Statut')->badge()
                         ->color(fn (string $state): string => match ($state) {
                             GuideExperienceStatusEnum::ONLINE->value          => 'success',
@@ -511,21 +511,21 @@ class GuideExperienceResource extends Resource
                         return $map[$key] ?? 'gray';
                     }),
 
-                // Section « À la une » de la home de l'app : seules les expériences en ligne peuvent y figurer
+                // Section « Nos coups de cœur » de la home de l'app : seules les expériences en ligne peuvent y figurer
                 ToggleColumn::make('is_featured')
-                    ->label('À la une')
+                    ->label('Coup de cœur')
                     ->sortable()
                     ->disabled(fn ($record) => ($record->getAttributes()['status'] ?? null) !== GuideExperienceStatusEnum::ONLINE->value)
                     ->tooltip(fn ($record) => ($record->getAttributes()['status'] ?? null) !== GuideExperienceStatusEnum::ONLINE->value
-                        ? 'Seules les expériences en ligne peuvent être mises à la une'
+                        ? 'Seules les expériences en ligne peuvent être en coup de cœur'
                         : null)
                     ->afterStateUpdated(function ($record, $state) {
                         $count = GuideExperience::where('is_featured', true)->count();
                         Notification::make()
-                            ->title($state ? 'Expérience mise à la une' : 'Expérience retirée de la une')
+                            ->title($state ? 'Expérience ajoutée aux coups de cœur' : 'Expérience retirée des coups de cœur')
                             ->body($count > self::HOME_FEATURED_LIMIT
-                                ? "{$count} expériences sont à la une : l'app n'affiche que les " . self::HOME_FEATURED_LIMIT . ' plus récemment mises en avant.'
-                                : "{$count} expérience(s) à la une.")
+                                ? "{$count} expériences sont en coup de cœur : l'app n'affiche que les " . self::HOME_FEATURED_LIMIT . ' plus récemment ajoutées.'
+                                : "{$count} expérience(s) en coup de cœur.")
                             ->color($count > self::HOME_FEATURED_LIMIT ? 'warning' : 'success')
                             ->send();
                     }),
@@ -543,7 +543,7 @@ class GuideExperienceResource extends Resource
             ])
             ->filters([
                 TernaryFilter::make('is_featured')
-                    ->label('À la une'),
+                    ->label('Coup de cœur'),
 
                 SelectFilter::make('status')
                     ->label('Statut')
