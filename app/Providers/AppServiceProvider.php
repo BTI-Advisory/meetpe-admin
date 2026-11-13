@@ -2,6 +2,8 @@
 
 namespace App\Providers;
 
+use App\Models\GuideExperience;
+use App\Observers\GuideExperienceObserver;
 use Filament\Support\Colors\Color;
 use Filament\Support\Facades\FilamentColor;
 use Illuminate\Support\ServiceProvider;
@@ -21,5 +23,7 @@ class AppServiceProvider extends ServiceProvider
             'slate'  => Color::hex('#64748b'),
             'dark'   => Color::hex('#374151'),
         ]);
+
+        GuideExperience::observe(GuideExperienceObserver::class);
     }
 }
